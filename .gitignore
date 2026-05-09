@@ -1,22 +1,30 @@
-# Node
-node_modules/
-frontend/node_modules/
-dist/
-frontend/dist/
-build/
-.env
-.env.local
-.env.production
-
-# Python
-venv/
-.venv/
-env/
+# Python basics
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+ENV/
 
 # Database
 *.db
@@ -32,8 +40,3 @@ __pycache__/
 # OS
 .DS_Store
 Thumbs.db
-
-# Logs
-*.log
-uvicorn_error.log
-uvicorn_output.log

@@ -5,8 +5,8 @@ from typing import Any, Union
 from jose import jwt
 
 # Security Configuration
-# IMPORTANT: In production, always set SECRET_KEY environment variable.
-SECRET_KEY = os.getenv("SECRET_KEY", "development-secret-key-change-me")
+# In production, use environment variables for SECRET_KEY
+SECRET_KEY = os.getenv("SECRET_KEY", "7b04519962a74c2e6f4770258416d610df666138be73a901844b20")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
