@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, HandCoins, ArrowRight, IndianRupee } from 'lucide-react';
+import { X, HandCoins, ArrowRight } from 'lucide-react';
 import api from '../services/api';
 import { useToast } from '../contexts/ToastContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 
 const SettleUpModal = ({ isOpen, onClose, groupId, currentUser, onSettled }) => {
   const { showToast } = useToast();
+  const { formatAmount, currency } = useCurrency();
   const [settlements, setSettlements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(null); // stores index or id of currently paying item
@@ -37,7 +39,7 @@ const SettleUpModal = ({ isOpen, onClose, groupId, currentUser, onSettled }) => 
   const handleConfirmPay = async (settlement, idx) => {
     setPaying(idx);
     const amountToPay = parseFloat(paymentAmount);
-    
+
     if (isNaN(amountToPay) || amountToPay <= 0 || amountToPay > settlement.amount + 0.01) {
       showToast('Enter a valid amount (up to the total owed)', 'warning');
       setPaying(null);
@@ -49,7 +51,8 @@ const SettleUpModal = ({ isOpen, onClose, groupId, currentUser, onSettled }) => 
         group_id: groupId,
         from_user_id: settlement.from_user_id,
         to_user_id: settlement.to_user_id,
-        amount: amountToPay
+        amount: amountToPay,
+        currency: settlement.currency || 'INR'
       });
       showToast('Payment recorded successfully! 🎉', 'success');
 
@@ -113,7 +116,7 @@ const SettleUpModal = ({ isOpen, onClose, groupId, currentUser, onSettled }) => 
                       {amIOwing ? 'You owe' : `${s.from_user_name} owes you`}
                     </span>
                     <span className={`text-lg font-bold tracking-tight ${amIOwing ? 'text-red-400' : 'text-emerald-400'}`}>
-                      ₹{s.amount.toFixed(2)}
+                      {formatAmount(s.amount, s.currency)}
                     </span>
                   </div>
 
@@ -138,15 +141,15 @@ const SettleUpModal = ({ isOpen, onClose, groupId, currentUser, onSettled }) => 
                       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500/50 to-transparent"></div>
                       <label className="text-[10px] uppercase tracking-widest text-[#A1A1AA] font-bold">Payment Amount</label>
                       <div className="relative group">
-                         <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 text-purple-400 transition-colors" size={16} />
-                         <input
-                           type="number"
-                           step="0.01"
-                           max={s.amount}
-                           className="w-full bg-[#12121A] border border-[#1F1F2B] rounded-lg pl-9 pr-3 py-2 text-sm font-bold text-white focus:outline-none focus:border-purple-500/50 transition-all placeholder:text-[#A1A1AA]/50"
-                           value={paymentAmount}
-                           onChange={(e) => setPaymentAmount(e.target.value)}
-                         />
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-purple-400 font-bold" style={{ fontSize: '14px' }}>{currency.symbol}</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          max={s.amount}
+                          className="w-full bg-[#12121A] border border-[#1F1F2B] rounded-lg pl-9 pr-3 py-2 text-sm font-bold text-white focus:outline-none focus:border-purple-500/50 transition-all placeholder:text-[#A1A1AA]/50"
+                          value={paymentAmount}
+                          onChange={(e) => setPaymentAmount(e.target.value)}
+                        />
                       </div>
                       <div className="flex gap-2 pt-1">
                         <button

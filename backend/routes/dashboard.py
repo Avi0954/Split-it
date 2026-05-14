@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from backend.models.user import User
 from backend.utils.dependencies import get_db, get_current_user
 from backend.services.settlement_service import calculate_optimized_settlements
+from backend.utils.currency import convert_currency
 
 router = APIRouter()
 
@@ -35,25 +36,26 @@ def get_dashboard_summary(
 
     # Calculate total spending by category (currently using groups as categories)
     spending_by_category = {}
-    total_spending = 0.0
+    total_spending_inr = 0.0
 
     # Fetch expenses paid by current user
     for membership in current_user.group_memberships:
         group = membership.group
-        group_spending = 0.0
+        group_spending_inr = 0.0
         for expense in group.expenses:
             if expense.payer_id == current_user.id:
-                group_spending += expense.amount
-                total_spending += expense.amount
+                amount_inr = convert_currency(expense.amount, expense.currency, "INR")
+                group_spending_inr += amount_inr
+                total_spending_inr += amount_inr
         
-        if group_spending > 0:
-            spending_by_category[group.name] = round(group_spending, 2)
+        if group_spending_inr > 0:
+            spending_by_category[group.name] = round(group_spending_inr, 2)
 
     return {
         "total_balance": round(total_owed - total_owing, 2),
         "total_owed": round(total_owed, 2),
         "total_owing": round(total_owing, 2),
         "total_groups": len(current_user.group_memberships),
-        "total_spending": round(total_spending, 2),
+        "total_spending": round(total_spending_inr, 2),
         "spending_by_category": spending_by_category
     }

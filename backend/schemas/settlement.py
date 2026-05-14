@@ -6,6 +6,7 @@ class SettlementBase(BaseModel):
     from_user_id: int
     to_user_id: int
     amount: float
+    currency: Optional[str] = "INR"
 
 class SettlementCreate(SettlementBase):
     group_id: int

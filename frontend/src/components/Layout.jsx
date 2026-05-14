@@ -37,14 +37,14 @@ const Layout = ({ children }) => {
       </div>
 
       {/* 3. DESKTOP SIDEBAR (Strict Visibility) */}
-      <div className="hidden lg:block fixed left-0 top-[72px] h-[calc(100vh-72px)] z-40">
+      <div className="hidden lg:block fixed left-0 top-[64px] h-[calc(100vh-64px)] z-40">
         <Sidebar />
       </div>
 
       {/* 4. MAIN CONTENT AREA */}
-      <main className="flex-1 overflow-y-auto transition-all duration-300 flex flex-col lg:ml-64 lg:mt-[72px] no-scrollbar">
+      <main className="flex-1 overflow-y-auto transition-all duration-300 flex flex-col lg:ml-60 lg:mt-[64px] no-scrollbar">
         {/* PAGE CONTENT WINDOW */}
-        <div className="px-5 lg:px-10 py-6 lg:py-8 max-w-[1400px] mx-auto w-full flex-1 pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-8">
+        <div className="px-6 lg:px-10 py-4 lg:py-8 max-w-[1400px] mx-auto w-full flex-1 pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-8">
           {children}
         </div>
       </main>

@@ -80,7 +80,7 @@ const CreateGroupModal = ({ isOpen, onClose, onGroupCreated }) => {
         <form onSubmit={handleSubmit} className="p-5 space-y-5">
           {/* Avatar Upload Section */}
           <div className="flex flex-col items-center justify-center pt-2 pb-4">
-            <div 
+            <div
               onClick={() => fileInputRef.current.click()}
               className="relative w-24 h-24 bg-[#09090B] border-2 border-dashed border-[#1F1F2B] hover:border-[#A78BFA] rounded-full flex items-center justify-center cursor-pointer overflow-hidden transition-all group"
             >
@@ -96,12 +96,12 @@ const CreateGroupModal = ({ isOpen, onClose, onGroupCreated }) => {
                 <ImagePlus size={20} className="text-[#EAEAF0]" />
               </div>
             </div>
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              onChange={handleFileChange} 
-              accept="image/*" 
-              className="hidden" 
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept="image/*"
+              className="hidden"
             />
             <p className="text-[11px] text-[#A1A1AA] mt-3 font-medium uppercase tracking-wider">Group Identity</p>
           </div>

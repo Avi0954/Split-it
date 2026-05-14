@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '../services/auth';
 import { useToast } from '../contexts/ToastContext';
 import { useSearch } from '../contexts/SearchContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 
 const Dashboard = () => {
   const [groups, setGroups] = useState([]);
@@ -19,6 +20,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { searchQuery } = useSearch();
+  const { formatAmount } = useCurrency();
 
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
@@ -74,19 +76,19 @@ const Dashboard = () => {
           {/* Financial Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Total Balance (Primary) */}
-            <div className="card relative overflow-hidden p-6 border-0 bg-gradient-to-br from-[#1E1B4B] to-[#09090B] shadow-[0_8px_30px_rgba(167,139,250,0.1)] group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#A78BFA]/10 blur-3xl rounded-full group-hover:bg-[#A78BFA]/20 transition-all duration-500" />
-              <div className="relative z-10 flex flex-col h-full justify-between gap-6">
+            <div className="premium-card relative p-6 border-0 bg-gradient-to-br from-[#1E1B4B] to-[#09090B] shadow-[0_12px_40px_rgba(0,0,0,0.5)] group h-full">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#A78BFA]/10 blur-3xl rounded-full group-hover:bg-[#A78BFA]/20 transition-all duration-700" />
+              <div className="relative z-10 flex flex-col h-full justify-between gap-8">
                 <div>
-                  <p className="text-[#A78BFA] text-xs font-semibold uppercase tracking-wider mb-2 opacity-90">Total Balance</p>
+                  <p className="text-[#A78BFA] text-[10px] font-bold uppercase tracking-[0.2em] mb-3 opacity-80">Total Balance</p>
                   {loading ? (
-                    <div className="h-10 w-32 bg-[#A78BFA]/20 rounded animate-pulse" />
+                    <div className="h-10 w-32 bg-[#A78BFA]/20 rounded-xl animate-pulse" />
                   ) : (
-                    <div className="space-y-1">
-                      <h3 className="text-4xl font-bold text-white tracking-tighter">
-                        {dashboardStats.total_balance >= 0 ? '' : '-'}₹{Math.abs(dashboardStats.total_balance).toFixed(2)}
+                    <div className="space-y-1.5">
+                      <h3 className="text-4xl font-bold text-white tracking-tighter leading-none">
+                        {formatAmount(dashboardStats.total_balance)}
                       </h3>
-                      <p className="text-[#C4B5FD] text-sm font-medium opacity-80">
+                      <p className="text-[#C4B5FD] text-xs font-semibold opacity-60">
                         {dashboardStats.total_balance > 0
                           ? 'You are owed overall'
                           : dashboardStats.total_balance < 0
@@ -97,54 +99,54 @@ const Dashboard = () => {
                   )}
                 </div>
                 {dashboardStats.total_balance >= 0 ? (
-                  <div className="flex items-center gap-2 text-[#C4B5FD] text-xs font-medium bg-[#A78BFA]/10 w-fit px-2.5 py-1 rounded-md">
-                    <TrendingUp size={14} />
-                    Looking good!
+                  <div className="flex items-center gap-2 text-[#C4B5FD] text-[10px] font-bold bg-[#A78BFA]/10 w-fit px-3 py-1.5 rounded-lg border border-[#A78BFA]/10">
+                    <TrendingUp size={12} strokeWidth={3} />
+                    LOOKING GOOD
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 text-rose-300 text-xs font-medium bg-rose-500/10 w-fit px-2.5 py-1 rounded-md">
-                    <ArrowUpRight size={14} />
-                    Time to pay back
+                  <div className="flex items-center gap-2 text-rose-300 text-[10px] font-bold bg-rose-500/10 w-fit px-3 py-1.5 rounded-lg border border-rose-500/10">
+                    <ArrowUpRight size={12} strokeWidth={3} />
+                    TIME TO PAY BACK
                   </div>
                 )}
               </div>
             </div>
 
             {/* You are owed (Green) */}
-            <div className="card p-5 flex flex-col justify-between group hover:border-[#34D399]/30">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-[#A1A1AA] text-xs font-semibold uppercase tracking-wider">You are owed</p>
-                  <div className="w-8 h-8 bg-[#34D399]/10 rounded-full flex items-center justify-center group-hover:bg-[#34D399]/20 transition-colors">
+            <div className="card p-5 flex flex-col justify-between group h-full">
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-[#A1A1AA] text-[10px] font-bold uppercase tracking-[0.2em] opacity-60">You are owed</p>
+                  <div className="w-8 h-8 bg-[#34D399]/10 rounded-xl flex items-center justify-center group-hover:bg-[#34D399]/20 group-hover:scale-110 transition-all duration-300">
                     <ArrowDownLeft className="text-[#34D399]" size={16} strokeWidth={2.5} />
                   </div>
                 </div>
                 {loading ? (
-                  <div className="h-8 w-24 bg-[#1F1F2B] rounded animate-pulse" />
+                  <div className="h-8 w-24 bg-[#1F1F2B] rounded-lg animate-pulse" />
                 ) : (
                   <div>
-                    <h3 className="text-2xl font-bold text-[#34D399] tracking-tight">₹{dashboardStats.total_owed.toFixed(2)}</h3>
-                    <p className="text-[10px] text-[#A1A1AA] font-medium mt-1">From your friends</p>
+                    <h3 className="text-2xl font-bold text-[#34D399] tracking-tight leading-none mb-2">{formatAmount(dashboardStats.total_owed)}</h3>
+                    <p className="text-[10px] text-[#A1A1AA] font-bold uppercase tracking-widest opacity-40">From your friends</p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* You owe (Red) */}
-            <div className="card p-5 flex flex-col justify-between group hover:border-[#F87171]/30">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-[#A1A1AA] text-xs font-semibold uppercase tracking-wider">You owe</p>
-                  <div className="w-8 h-8 bg-[#F87171]/10 rounded-full flex items-center justify-center group-hover:bg-[#F87171]/20 transition-colors">
+            <div className="card p-5 flex flex-col justify-between group h-full">
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-[#A1A1AA] text-[10px] font-bold uppercase tracking-[0.2em] opacity-60">You owe</p>
+                  <div className="w-8 h-8 bg-[#F87171]/10 rounded-xl flex items-center justify-center group-hover:bg-[#F87171]/20 group-hover:scale-110 transition-all duration-300">
                     <ArrowUpRight className="text-[#F87171]" size={16} strokeWidth={2.5} />
                   </div>
                 </div>
                 {loading ? (
-                  <div className="h-8 w-24 bg-[#1F1F2B] rounded animate-pulse" />
+                  <div className="h-8 w-24 bg-[#1F1F2B] rounded-lg animate-pulse" />
                 ) : (
                   <div>
-                    <h3 className="text-2xl font-bold text-[#F87171] tracking-tight">₹{dashboardStats.total_owing.toFixed(2)}</h3>
-                    <p className="text-[10px] text-[#A1A1AA] font-medium mt-1">Across your groups</p>
+                    <h3 className="text-2xl font-bold text-[#F87171] tracking-tight leading-none mb-2">{formatAmount(dashboardStats.total_owing)}</h3>
+                    <p className="text-[10px] text-[#A1A1AA] font-bold uppercase tracking-widest opacity-40">Across your groups</p>
                   </div>
                 )}
               </div>
@@ -201,58 +203,54 @@ const Dashboard = () => {
                   <div
                     key={group.id}
                     onClick={() => navigate(`/groups/${group.id}`)}
-                    className="premium-card flex flex-col cursor-pointer group"
+                    className="premium-card flex flex-col cursor-pointer group h-full"
                   >
                     {/* Subtle Internal Glow */}
                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#A78BFA]/5 blur-3xl -mr-16 -mt-16 group-hover:bg-[#A78BFA]/10 transition-all duration-700" />
 
                     <div className="p-5 flex flex-col justify-between h-full relative z-10">
                       <div>
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-[#09090B] rounded-xl flex items-center justify-center text-[#A78BFA] border border-[#1F1F2B] overflow-hidden group-hover:scale-105 group-hover:border-[#A78BFA]/30 transition-all duration-300 relative shadow-lg">
-                              <div className="absolute inset-0 bg-gradient-to-br from-[#A78BFA]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="flex items-start justify-between mb-6">
+                          <div className="flex items-center gap-3.5">
+                            <div className="w-11 h-11 bg-[#09090B] rounded-xl flex items-center justify-center text-[#A78BFA] border border-[#1F1F2B] overflow-hidden group-hover:scale-110 group-hover:border-[#A78BFA]/30 transition-all duration-500 relative shadow-xl">
+                              <div className="absolute inset-0 bg-gradient-to-br from-[#A78BFA]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                               {group.avatar ? (
                                 <img src={`http://localhost:8000${group.avatar}`} alt={group.name} className="w-full h-full object-cover" />
                               ) : (
-                                <Users size={18} strokeWidth={2.5} />
+                                <Users size={20} strokeWidth={2} />
                               )}
                             </div>
                             <div className="min-w-0">
-                              <h4 className="font-black text-white text-sm leading-tight group-hover:text-[#A78BFA] transition-colors truncate pr-2">{group.name}</h4>
-                              <p className="text-[9px] text-[#A1A1AA] mt-1 font-black uppercase tracking-wider opacity-60">
+                              <h4 className="font-bold text-[#EAEAF0] text-sm leading-tight group-hover:text-[#A78BFA] transition-colors truncate pr-2">{group.name}</h4>
+                              <p className="text-[10px] text-[#A1A1AA] mt-1 font-bold uppercase tracking-widest opacity-40">
                                 {group.members_count || 1} members
                               </p>
                             </div>
                           </div>
-                          <ChevronRight size={16} className="text-[#A1A1AA] group-hover:text-white transition-all transform group-hover:translate-x-1 shrink-0" />
+                          <div className="p-2 rounded-lg bg-[#1F1F2B]/30 group-hover:bg-[#A78BFA]/10 transition-colors">
+                            <ChevronRight size={14} className="text-[#A1A1AA] group-hover:text-[#A78BFA] transition-all transform group-hover:translate-x-0.5" />
+                          </div>
                         </div>
 
-                        <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center justify-between mb-5">
                           <div className="flex-1">
                             {Math.round(group.user_balance || 0) === 0 ? (
-                              <div className="glass-pill px-2 py-1 rounded-md w-fit border-[#34D399]/20 shadow-[0_0_10px_rgba(52,211,153,0.1)]">
-                                <span className="text-[9px] font-black text-[#34D399] uppercase tracking-widest text-glow-green">Settled ✓</span>
+                              <div className="glass-pill px-3 py-1 rounded-lg w-fit border-[#34D399]/20 shadow-[0_0_15px_rgba(52,211,153,0.05)]">
+                                <span className="text-[9px] font-bold text-[#34D399] uppercase tracking-[0.2em] text-glow-green">Settled ✓</span>
                               </div>
                             ) : (
-                              <>
-                                <p className={`text-[9px] font-black uppercase tracking-widest mb-1 opacity-50 ${group.user_balance > 0 ? 'text-[#34D399]' : 'text-[#F87171]'
+                              <div className="space-y-1.5">
+                                <p className={`text-[10px] font-bold uppercase tracking-[0.2em] opacity-40 ${group.user_balance > 0 ? 'text-[#34D399]' : 'text-[#F87171]'
                                   }`}>
                                   {group.user_balance > 0 ? 'You get back' : 'You owe'}
                                 </p>
-                                <div className="flex items-baseline gap-0.5">
-                                  <span className={`text-2xl font-black tracking-tighter ${group.user_balance > 0 ? 'text-[#34D399] text-glow-green' : 'text-[#F87171] text-glow-red'
+                                <div className="flex items-baseline gap-1 max-w-full overflow-hidden">
+                                  <span className={`text-2xl font-bold tracking-tighter truncate ${group.user_balance > 0 ? 'text-[#34D399] text-glow-green' : 'text-[#F87171] text-glow-red'
                                     }`}>
-                                    {group.user_balance > 0 ? '+₹' : '-₹'}{Math.round(Math.abs(group.user_balance || 0))}
+                                    {group.user_balance > 0 ? '+' : ''}{formatAmount(group.user_balance)}
                                   </span>
-                                  {Math.abs(group.user_balance || 0) % 1 !== 0 && (
-                                    <span className={`text-[10px] font-bold opacity-20 ${group.user_balance > 0 ? 'text-[#34D399]' : 'text-[#F87171]'
-                                      }`}>
-                                      .{(Math.abs(group.user_balance || 0) % 1).toFixed(2).split('.')[1]}
-                                    </span>
-                                  )}
                                 </div>
-                              </>
+                              </div>
                             )}
                           </div>
 
@@ -338,10 +336,10 @@ const Dashboard = () => {
                     </PieChart>
                   </ResponsiveContainer>
                   {/* Center text */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <p className="text-[#A1A1AA] text-[10px] uppercase font-bold tracking-widest">Total</p>
-                    <p className="text-[#EAEAF0] font-bold text-lg">
-                      ₹{dashboardStats.total_spending > 1000 ? (dashboardStats.total_spending / 1000).toFixed(1) + 'K' : Math.round(dashboardStats.total_spending)}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-2">
+                    <p className="text-[#A1A1AA] text-[9px] uppercase font-bold tracking-[0.2em] mb-0.5 opacity-60">Total</p>
+                    <p className="text-[#EAEAF0] font-bold text-sm md:text-base tracking-tight text-center w-full max-w-[80px] leading-tight break-words">
+                      {formatAmount(dashboardStats.total_spending)}
                     </p>
                   </div>
                 </>
@@ -350,12 +348,12 @@ const Dashboard = () => {
             {/* Legend */}
             <div className="mt-2 space-y-2">
               {!loading && Object.entries(dashboardStats.spending_by_category || {}).slice(0, 3).map(([name, value], index) => (
-                <div key={name} className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 text-[#A1A1AA] font-medium">
-                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: ['#A78BFA', '#34D399', '#F472B6', '#60A5FA', '#FBBF24'][index % 5] }} />
-                    <span className="truncate max-w-[120px]">{name}</span>
+                <div key={name} className="flex items-center justify-between text-xs min-w-0 gap-2">
+                  <div className="flex items-center gap-2 text-[#A1A1AA] font-medium min-w-0 flex-1">
+                    <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: ['#A78BFA', '#34D399', '#F472B6', '#60A5FA', '#FBBF24'][index % 5] }} />
+                    <span className="truncate">{name}</span>
                   </div>
-                  <span className="text-[#EAEAF0] font-bold">₹{Math.round(value)}</span>
+                  <span className="text-[#EAEAF0] font-bold shrink-0">{formatAmount(value)}</span>
                 </div>
               ))}
               {!loading && Object.keys(dashboardStats.spending_by_category || {}).length === 0 && (
@@ -380,19 +378,19 @@ const Dashboard = () => {
                 <p className="text-xs text-[#A1A1AA] italic text-center py-4">No recent activity found.</p>
               ) : (
                 activities.slice(0, 5).map((act, idx) => (
-                  <div key={idx} className="flex items-start gap-3 group">
-                    <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center ${act.type === 'expense' ? 'bg-[#A78BFA]/10 text-[#A78BFA]' : 'bg-[#34D399]/10 text-[#34D399]'}`}>
+                  <div key={idx} className="flex items-start gap-3 group py-1">
+                    <div className={`w-8 h-8 shrink-0 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${act.type === 'expense' ? 'bg-[#A78BFA]/10 text-[#A78BFA]' : 'bg-[#34D399]/10 text-[#34D399]'}`}>
                       {act.type === 'expense' ? <Receipt size={14} /> : <HandCoins size={14} />}
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-[#EAEAF0] leading-snug">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-[#EAEAF0] leading-snug truncate">
                         {act.type === 'expense' ? (
-                          <>{act.by_user} added <span className="text-[#EAEAF0] font-bold">"{act.description}"</span></>
+                          <>{act.by_user} added <span className="text-white font-bold">"{act.description}"</span></>
                         ) : (
-                          <>{act.by_user} paid <span className="text-[#34D399] font-bold">₹{act.amount.toFixed(2)}</span> to {act.to_user}</>
+                          <>{act.by_user} paid <span className="text-[#34D399] font-bold">{formatAmount(act.amount)}</span> to {act.to_user}</>
                         )}
                       </p>
-                      <p className="text-[10px] text-[#A1A1AA] mt-0.5 font-medium uppercase tracking-wider">
+                      <p className="text-[10px] text-[#A1A1AA] mt-0.5 font-bold uppercase tracking-widest opacity-40">
                         {new Date(act.created_at).toLocaleDateString()} • {act.group_name}
                       </p>
                     </div>

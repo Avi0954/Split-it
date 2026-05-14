@@ -3,6 +3,7 @@ import { Activity as ActivityIcon, Receipt, HandCoins, Calendar, Users } from 'l
 import Layout from '../components/Layout';
 import api from '../services/api';
 import { useToast } from '../contexts/ToastContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 
 const timeAgo = (dateStr) => {
   const diffInSeconds = Math.floor((new Date() - new Date(dateStr)) / 1000);
@@ -20,6 +21,7 @@ const Activity = () => {
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
   const { showToast } = useToast();
+  const { currency, formatAmount } = useCurrency();
 
   useEffect(() => {
     const fetchActivity = async () => {
@@ -63,26 +65,25 @@ const Activity = () => {
           </div>
         ) : feed.length === 0 ? (
           <div className="text-center py-24 card bg-transparent border-dashed border-2 border-[#1F1F2B] rounded-2xl">
-              <span className="text-4xl mb-4 inline-block">📭</span>
-              <h3 className="text-xl font-bold text-[#EAEAF0]">No Activity Yet</h3>
-              <p className="text-[#A1A1AA] mt-2 text-sm max-w-sm mx-auto">
-                Once you start adding expenses and settling up in your groups, they will appear right here.
-              </p>
+            <span className="text-4xl mb-4 inline-block">📭</span>
+            <h3 className="text-xl font-bold text-[#EAEAF0]">No Activity Yet</h3>
+            <p className="text-[#A1A1AA] mt-2 text-sm max-w-sm mx-auto">
+              Once you start adding expenses and settling up in your groups, they will appear right here.
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
             {feed.map((item) => {
               const isExpense = item.type === "expense";
               return (
-                <div 
-                  key={item.id} 
+                <div
+                  key={item.id}
                   className="card p-5 border-[#1F1F2B] hover:border-[#1F1F2B] hover:bg-[#1A1A24] transition-colors rounded-2xl group flex items-start sm:items-center gap-4 cursor-default"
                 >
-                  <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border ${
-                    isExpense 
-                      ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' 
-                      : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                  }`}>
+                  <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border ${isExpense
+                    ? 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                    : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                    }`}>
                     {isExpense ? <Receipt size={20} /> : <HandCoins size={20} />}
                   </div>
 
@@ -99,8 +100,13 @@ const Activity = () => {
                           </>
                         )}
                       </p>
-                      <span className="text-lg font-bold tracking-tight text-[#EAEAF0] flex-shrink-0">
-                        ₹{item.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      <span className="text-lg font-bold tracking-tight text-[#EAEAF0] flex-shrink-0 text-right">
+                        {formatAmount(item.amount, item.currency)}
+                        {item.currency !== currency.code && (
+                          <div className="text-[9px] text-[#A1A1AA] font-bold uppercase tracking-tighter opacity-50 leading-none mt-1">
+                            ≈ {item.currency === 'INR' ? '₹' : 'रु'}{item.amount.toFixed(2)}
+                          </div>
+                        )}
                       </span>
                     </div>
 

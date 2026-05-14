@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
 import { getCurrentUser } from '../services/auth';
 import { useSearch } from '../contexts/SearchContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 
 const GroupsPage = () => {
   const [groups, setGroups] = useState([]);
@@ -26,6 +27,7 @@ const GroupsPage = () => {
 
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { currency, formatAmount } = useCurrency();
 
   const fetchPageData = useCallback(async () => {
     setLoading(true);
@@ -150,7 +152,7 @@ const GroupsPage = () => {
                       className="premium-card flex flex-col cursor-pointer group h-full"
                     >
                       {/* Subtle Internal Glow */}
-                      <div className={`absolute top-0 right-0 w-32 h-32 bg-[#A78BFA]/5 blur-3xl -mr-16 -mt-16 transition-all duration-700 ${isSettled ? 'xl:group-hover:bg-[#A78BFA]/[0.03]' : 'group-hover:bg-[#A78BFA]/10'
+                      <div className={`absolute top-0 right-0 w-24 h-24 bg-[#A78BFA]/[0.03] blur-2xl -mr-12 -mt-12 transition-all duration-700 ${isSettled ? 'xl:group-hover:bg-[#A78BFA]/[0.01]' : 'group-hover:bg-[#A78BFA]/[0.06]'
                         }`} />
 
                       {/* Top Section: Branding & Name */}
@@ -167,13 +169,13 @@ const GroupsPage = () => {
                               )}
                             </div>
                             <div className="min-w-0">
-                              <h4 className={`text-lg font-black text-white tracking-tight leading-tight truncate pr-4 transition-colors duration-300 ${isSettled ? 'xl:group-hover:text-[#EAEAF0]' : 'group-hover:text-[#A78BFA]'
+                              <h4 className={`text-lg font-bold text-white tracking-tight leading-tight truncate pr-4 transition-colors duration-300 ${isSettled ? 'xl:group-hover:text-[#EAEAF0]' : 'group-hover:text-[#A78BFA]'
                                 }`}>
                                 {group.name}
                               </h4>
                               <div className="flex items-center gap-1.5 mt-1">
-                                <div className="w-1.5 h-1.5 rounded-full bg-[#A78BFA]/60" />
-                                <p className="text-[10px] text-[#A1A1AA] font-black uppercase tracking-[0.2em]">
+                                <div className="w-1.5 h-1.5 rounded-full bg-[#A78BFA]/40" />
+                                <p className="text-[10px] text-[#A1A1AA] font-bold uppercase tracking-[0.15em]">
                                   {group.members_count || 1} Members
                                 </p>
                               </div>
@@ -200,27 +202,21 @@ const GroupsPage = () => {
                       <div className="px-6 py-4 xl:py-1 flex items-center justify-between relative z-10">
                         <div className="flex-1">
                           {isSettled ? (
-                            <div className="glass-pill px-3 py-1.5 rounded-full w-fit flex items-center gap-2 border-[#34D399]/20 shadow-[0_0_15px_rgba(52,211,153,0.1)]">
-                              <CheckCircle2 size={12} className="text-[#34D399]" />
-                              <span className="text-[10px] font-black text-[#34D399] uppercase tracking-widest text-glow-green">Settled Up</span>
+                            <div className="glass-pill px-3 py-1.5 rounded-full w-fit flex items-center gap-2 border-[#10B981]/10 shadow-sm">
+                              <CheckCircle2 size={12} className="text-[#10B981]" />
+                              <span className="text-[10px] font-bold text-[#10B981] uppercase tracking-widest text-glow-green">Settled Up</span>
                             </div>
                           ) : (
                             <div className="space-y-1">
-                              <p className={`text-[10px] font-black uppercase tracking-[0.25em] opacity-50 ${group.user_balance > 0 ? 'text-[#34D399]' : 'text-[#F87171]'
+                              <p className={`text-[10px] font-bold uppercase tracking-[0.2em] opacity-40 ${group.user_balance > 0 ? 'text-[#10B981]' : 'text-[#F87171]'
                                 }`}>
                                 {group.user_balance > 0 ? "You are owed" : "You owe"}
                               </p>
                               <div className="flex items-baseline gap-1">
-                                <h3 className={`text-5xl font-black tracking-tighter transition-all duration-500 group-hover:scale-105 origin-left ${group.user_balance > 0 ? 'text-[#34D399] text-glow-green' : 'text-[#F87171] text-glow-red'
+                                <h3 className={`text-4xl font-bold tracking-tighter transition-all duration-500 group-hover:scale-105 origin-left ${group.user_balance > 0 ? 'text-[#10B981] text-glow-green' : 'text-[#F87171] text-glow-red'
                                   }`}>
-                                  <span className="text-3xl mr-0.5 opacity-80">{group.user_balance > 0 ? '+' : '-'}</span>₹{Math.round(Math.abs(group.user_balance || 0))}
+                                  {group.user_balance > 0 ? '+' : ''}{formatAmount(group.user_balance)}
                                 </h3>
-                                {Math.abs(group.user_balance || 0) % 1 !== 0 && (
-                                  <span className={`text-xl font-bold opacity-30 ${group.user_balance > 0 ? 'text-[#34D399]' : 'text-[#F87171]'
-                                    }`}>
-                                    .{(Math.abs(group.user_balance || 0) % 1).toFixed(2).split('.')[1]}
-                                  </span>
-                                )}
                               </div>
                             </div>
                           )}
@@ -244,11 +240,11 @@ const GroupsPage = () => {
                       {/* Bottom Section: Activity & Actions */}
                       <div className="mt-auto p-6 pt-2 xl:pt-1 relative z-10">
                         {/* Activity Pill */}
-                        <div className="glass-pill px-4 py-3 xl:py-2.5 rounded-2xl flex items-center gap-3 mb-6 xl:mb-4 bg-white/[0.01] border-white/[0.02] group-hover:bg-white/[0.03] transition-colors duration-500">
-                          <div className="w-7 h-7 rounded-full bg-[#A78BFA]/15 flex items-center justify-center text-[#A78BFA]">
-                            <Clock size={14} strokeWidth={2.5} />
+                        <div className="glass-pill px-4 py-2.5 xl:py-2 rounded-xl flex items-center gap-3 mb-5 xl:mb-3.5 bg-white/[0.01] border-white/[0.01] group-hover:bg-white/[0.03] transition-colors duration-500">
+                          <div className="w-7 h-7 rounded-full bg-[#A78BFA]/10 flex items-center justify-center text-[#A78BFA]">
+                            <Clock size={13} strokeWidth={2} />
                           </div>
-                          <p className="text-[11px] font-bold text-[#EAEAF0] leading-tight truncate opacity-60 group-hover:opacity-100 transition-opacity">
+                          <p className="text-[11px] font-semibold text-[#A1A1AA] leading-tight truncate group-hover:text-[#EAEAF0] transition-colors">
                             {group.last_activity || "Start splitting bills to see activity"}
                           </p>
                         </div>
@@ -308,17 +304,17 @@ const GroupsPage = () => {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-[#A1A1AA]">Total Owed to You</span>
-                <span className="text-sm font-bold text-[#34D399]">₹{dashboardStats.total_owed.toFixed(2)}</span>
+                <span className="text-sm font-bold text-[#34D399]">{formatAmount(dashboardStats.total_owed)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-[#A1A1AA]">Total You Owe</span>
-                <span className="text-sm font-bold text-[#F87171]">₹{dashboardStats.total_owing.toFixed(2)}</span>
+                <span className="text-sm font-bold text-[#F87171]">{formatAmount(dashboardStats.total_owing)}</span>
               </div>
               <div className="w-full h-px bg-[#1F1F2B]" />
               <div className="flex items-center justify-between">
                 <span className="text-sm font-bold text-[#EAEAF0]">Net Balance</span>
                 <span className={`text-sm font-bold ${dashboardStats.total_balance > 0 ? 'text-[#34D399]' : dashboardStats.total_balance < 0 ? 'text-[#F87171]' : 'text-[#EAEAF0]'}`}>
-                  {dashboardStats.total_balance > 0 ? '+' : ''}₹{Math.abs(dashboardStats.total_balance).toFixed(2)}
+                  {dashboardStats.total_balance > 0 ? '+' : ''}{formatAmount(dashboardStats.total_balance)}
                 </span>
               </div>
             </div>

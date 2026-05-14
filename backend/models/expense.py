@@ -9,6 +9,7 @@ class Expense(Base):
     id = Column(Integer, primary_key=True, index=True)
     description = Column(String, nullable=False)
     amount = Column(Float, nullable=False)
+    currency = Column(String, default="INR")
     payer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     group_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)

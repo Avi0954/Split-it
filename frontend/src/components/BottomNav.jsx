@@ -6,7 +6,7 @@ const BottomNav = () => {
   const { pathname } = useLocation();
 
   const navItems = [
-    { label: 'Home', path: '/dashboard', icon: Home },
+    { label: 'Dashboard', path: '/dashboard', icon: Home },
     { label: 'Groups', path: '/groups', icon: Users },
     { label: 'Add', isAction: true },
     { label: 'Friends', path: '/friends', icon: User },

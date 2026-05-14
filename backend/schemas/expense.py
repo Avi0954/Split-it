@@ -18,6 +18,7 @@ class SplitResponse(SplitBase):
 class ExpenseBase(BaseModel):
     description: str
     amount: float
+    currency: Optional[str] = "INR"
     payer_id: int
 
 class ExpenseCreate(ExpenseBase):

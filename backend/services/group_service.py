@@ -13,6 +13,7 @@ def create_group(db: Session, user_id: int, group_data: GroupCreate, avatar: str
         name=group_data.name,
         description=group_data.description,
         avatar=avatar,
+        currency=group_data.currency,
         created_by=user_id
     )
     db.add(new_group)

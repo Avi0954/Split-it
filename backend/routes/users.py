@@ -93,6 +93,7 @@ def get_user_activity(
             "id": f"exp_{exp.id}",
             "description": exp.description,
             "amount": exp.amount,
+            "currency": exp.currency,
             "group_name": exp.group.name,
             "by_user": exp.payer.name,
             "created_at": exp.created_at.isoformat()
@@ -104,6 +105,7 @@ def get_user_activity(
             "id": f"set_{s.id}",
             "description": "Settled debt",
             "amount": s.amount,
+            "currency": s.currency,
             "group_name": s.group.name,
             "by_user": s.from_user.name,
             "to_user": s.to_user.name,

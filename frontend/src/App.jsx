@@ -12,19 +12,12 @@ import GroupsPage from './pages/GroupsPage';
 import FriendsPage from './pages/FriendsPage';
 import Profile from './pages/Profile';
 import Activity from './pages/Activity';
-import Settings from './pages/Settings';
-import SettingsProfile from './pages/settings/SettingsProfile';
-import SettingsSecurity from './pages/settings/SettingsSecurity';
-import SettingsPrivacy from './pages/settings/SettingsPrivacy';
-import SettingsNotifications from './pages/settings/SettingsNotifications';
-import SettingsAppearance from './pages/settings/SettingsAppearance';
-import SettingsRegion from './pages/settings/SettingsRegion';
-import SettingsCurrency from './pages/settings/SettingsCurrency';
-import SettingsAbout from './pages/settings/SettingsAbout';
+
 
 import { ToastProvider } from './contexts/ToastContext';
 import { SearchProvider } from './contexts/SearchContext';
 import { HeaderProvider } from './contexts/HeaderContext';
+import { CurrencyProvider } from './contexts/CurrencyContext';
 
 /**
  * Root Application Routing Component
@@ -40,103 +33,90 @@ function App() {
 
   return (
     <ToastProvider>
-      <HeaderProvider>
-        <Router>
-          <SearchProvider>
-            <Routes>
-              {/* Public Routes - Accessible only when logged out */}
-              <Route
-                path="/login"
-                element={
-                  <PublicRoute>
-                    <Login />
-                  </PublicRoute>
-                }
-              />
-              <Route
-                path="/signup"
-                element={
-                  <PublicRoute>
-                    <Signup />
-                  </PublicRoute>
-                }
-              />
+      <CurrencyProvider>
+        <HeaderProvider>
+          <Router>
+            <SearchProvider>
+              <Routes>
+                {/* Public Routes - Accessible only when logged out */}
+                <Route
+                  path="/login"
+                  element={
+                    <PublicRoute>
+                      <Login />
+                    </PublicRoute>
+                  }
+                />
+                <Route
+                  path="/signup"
+                  element={
+                    <PublicRoute>
+                      <Signup />
+                    </PublicRoute>
+                  }
+                />
 
-              {/* Protected Routes - Accessible only when logged in */}
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/groups"
-                element={
-                  <ProtectedRoute>
-                    <GroupsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/friends"
-                element={
-                  <ProtectedRoute>
-                    <FriendsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/groups/:id"
-                element={
-                  <ProtectedRoute>
-                    <GroupDetails />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/activity"
-                element={
-                  <ProtectedRoute>
-                    <Activity />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/settings"
-                element={
-                  <ProtectedRoute>
-                    <Settings />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/settings/profile" element={<ProtectedRoute><SettingsProfile /></ProtectedRoute>} />
-              <Route path="/settings/security" element={<ProtectedRoute><SettingsSecurity /></ProtectedRoute>} />
-              <Route path="/settings/privacy" element={<ProtectedRoute><SettingsPrivacy /></ProtectedRoute>} />
-              <Route path="/settings/notifications" element={<ProtectedRoute><SettingsNotifications /></ProtectedRoute>} />
-              <Route path="/settings/appearance" element={<ProtectedRoute><SettingsAppearance /></ProtectedRoute>} />
-              <Route path="/settings/region" element={<ProtectedRoute><SettingsRegion /></ProtectedRoute>} />
-              <Route path="/settings/currency" element={<ProtectedRoute><SettingsCurrency /></ProtectedRoute>} />
-              <Route path="/settings/about" element={<ProtectedRoute><SettingsAbout /></ProtectedRoute>} />
+                {/* Protected Routes - Accessible only when logged in */}
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/groups"
+                  element={
+                    <ProtectedRoute>
+                      <GroupsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/friends"
+                  element={
+                    <ProtectedRoute>
+                      <FriendsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/groups/:id"
+                  element={
+                    <ProtectedRoute>
+                      <GroupDetails />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/activity"
+                  element={
+                    <ProtectedRoute>
+                      <Activity />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Dynamic Root Redirect based on Auth */}
-              <Route path="/" element={<RootRedirect />} />
 
-              {/* Catch-all route to handle 404s/unknown paths */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </SearchProvider>
-        </Router>
-      </HeaderProvider>
+                {/* Dynamic Root Redirect based on Auth */}
+                <Route path="/" element={<RootRedirect />} />
+
+                {/* Catch-all route to handle 404s/unknown paths */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </SearchProvider>
+          </Router>
+        </HeaderProvider>
+      </CurrencyProvider>
     </ToastProvider>
   );
 }

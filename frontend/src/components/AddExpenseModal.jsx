@@ -3,6 +3,7 @@ import { X, Receipt, Loader2, CheckCircle2, Users, ChevronDown, UploadCloud, Fil
 import api from '../services/api';
 import { getCurrentUser } from '../services/auth';
 import { useToast } from '../contexts/ToastContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 
 const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMembers = [], onExpenseAdded = () => { }, editExpense = null }) => {
   const [description, setDescription] = useState('');
@@ -15,7 +16,9 @@ const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMember
   const [isLoading, setIsLoading] = useState(false);
   const [receiptFile, setReceiptFile] = useState(null);
   const [isGroupDropdownOpen, setIsGroupDropdownOpen] = useState(false);
+  const [groupCurrency, setGroupCurrency] = useState('INR');
   const { showToast } = useToast();
+  const { currency, formatAmount } = useCurrency();
 
   // Global Context State
   const [currentUser, setCurrentUser] = useState(null);
@@ -73,6 +76,7 @@ const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMember
     try {
       const res = await api.get(`/groups/${groupId}`);
       setMembers(res.data.members.map(m => m.user));
+      setGroupCurrency(res.data.currency || 'INR');
     } catch (e) {
       console.error(e);
     }
@@ -84,6 +88,10 @@ const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMember
         setDescription(editExpense.description);
         setAmount(editExpense.amount.toString());
         setPayerId(editExpense.payer_id.toString());
+
+        if (editExpense.currency) {
+          setGroupCurrency(editExpense.currency);
+        }
 
         const splitUserIds = editExpense.splits ? editExpense.splits.map(s => s.user_id) : [];
         setParticipantIds(splitUserIds);
@@ -173,7 +181,7 @@ const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMember
         });
         if (Math.abs(customTotal - parsedAmount) > 0.01) {
           setIsLoading(false);
-          return showToast(`Sum must be ₹${parsedAmount.toFixed(2)} (Total: ₹${customTotal.toFixed(2)})`, 'error');
+          return showToast(`Sum must be ${formatAmount(parsedAmount)} (Total: ${formatAmount(customTotal)})`, 'error');
         }
       } else if (splitMode === 'percentage') {
         let pctTotal = 0;
@@ -205,6 +213,7 @@ const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMember
         description,
         amount: parsedAmount,
         payer_id: parseInt(payerId),
+        currency: groupCurrency,
         splits: splits
       };
 
@@ -215,10 +224,10 @@ const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMember
         await api.post(`/groups/${selectedGroupId}/expenses`, payload);
         showToast('Expense created successfully! 🎉');
       }
-      
+
       // Dispatch global event for cross-component refresh
       window.dispatchEvent(new CustomEvent('EXPENSE_ADDED'));
-      
+
       onExpenseAdded();
       onClose();
     } catch (err) {
@@ -258,12 +267,12 @@ const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMember
       }
     } else if (splitMode === 'exact') {
       if (participantIds.includes(currentUser.id)) {
-         currentUserOwedAmount = parseFloat(exactSplits[currentUser.id] || 0);
+        currentUserOwedAmount = parseFloat(exactSplits[currentUser.id] || 0);
       }
     } else if (splitMode === 'percentage') {
       if (participantIds.includes(currentUser.id)) {
-         const pct = parseFloat(percentageSplits[currentUser.id] || 0);
-         currentUserOwedAmount = (parsedAmt * pct) / 100;
+        const pct = parseFloat(percentageSplits[currentUser.id] || 0);
+        currentUserOwedAmount = (parsedAmt * pct) / 100;
       }
     }
 
@@ -297,14 +306,14 @@ const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMember
         {/* SINGLE SCROLLABLE CONTENT AREA */}
         <div className="flex-1 overflow-y-auto no-scrollbar bg-[#09090B]">
           <form id="expense-form" onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] divide-y lg:divide-y-0 lg:divide-x divide-[#1F1F2B]">
-            
+
             {/* Left Side: Core Inputs */}
             <div className="p-6 space-y-8">
               {/* Amount - Large & Centered */}
               <div className="space-y-3 flex flex-col items-center justify-center py-6 bg-[#12121A]/30 rounded-3xl border border-[#1F1F2B]/50">
                 <label className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest opacity-60">Enter Amount</label>
                 <div className="flex items-center justify-center gap-2 group">
-                  <span className="text-[#A78BFA] font-bold text-4xl lg:text-5xl drop-shadow-[0_0_12px_rgba(167,139,250,0.4)] transition-all group-focus-within:text-[#C4B5FD] mt-1">₹</span>
+                  <span className="text-[#A78BFA] font-bold text-4xl lg:text-5xl drop-shadow-[0_0_12px_rgba(167,139,250,0.4)] transition-all group-focus-within:text-[#C4B5FD] mt-1">{currency.symbol}</span>
                   <input
                     type="number"
                     step="0.01"
@@ -341,7 +350,7 @@ const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMember
               {(!initialGroupId && !editExpense) && (
                 <div className="space-y-2.5 px-1 relative">
                   <label className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest ml-1 opacity-60">Select Group</label>
-                  <div 
+                  <div
                     className={`w-full bg-[#12121A]/50 border ${isGroupDropdownOpen ? 'border-[#A78BFA] ring-1 ring-[#A78BFA]/30' : 'border-[#1F1F2B] hover:border-[#1F1F2B]/80'} rounded-xl px-4 py-3.5 text-sm transition-all font-semibold text-[#EAEAF0] cursor-pointer flex items-center justify-between shadow-inner`}
                     onClick={() => setIsGroupDropdownOpen(!isGroupDropdownOpen)}
                   >
@@ -351,7 +360,7 @@ const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMember
                     </div>
                     <ChevronDown className={`text-[#A1A1AA] transition-transform duration-300 ${isGroupDropdownOpen ? 'rotate-180' : ''}`} size={16} />
                   </div>
-                  
+
                   {isGroupDropdownOpen && (
                     <div className="absolute top-[100%] mt-2 left-1 right-1 z-50 bg-[#12121A] border border-[#1F1F2B] rounded-xl shadow-2xl max-h-48 overflow-y-auto no-scrollbar animate-in fade-in slide-in-from-top-2">
                       {groups.length === 0 ? (
@@ -388,11 +397,10 @@ const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMember
                       key={member.id}
                       type="button"
                       onClick={() => setPayerId(member.id.toString())}
-                      className={`flex-shrink-0 flex items-center gap-2.5 px-4 py-2 rounded-xl border transition-all active:scale-95 ${
-                        payerId === member.id.toString()
-                          ? 'bg-[#A78BFA] border-[#A78BFA] text-black font-bold shadow-[0_4px_15px_rgba(167,139,250,0.3)]'
-                          : 'bg-[#12121A]/50 border-[#1F1F2B] text-[#A1A1AA] hover:border-[#1F1F2B]/80 hover:bg-[#1F1F2B] hover:text-[#EAEAF0]'
-                      }`}
+                      className={`flex-shrink-0 flex items-center gap-2.5 px-4 py-2 rounded-xl border transition-all active:scale-95 ${payerId === member.id.toString()
+                        ? 'bg-[#A78BFA] border-[#A78BFA] text-black font-bold shadow-[0_4px_15px_rgba(167,139,250,0.3)]'
+                        : 'bg-[#12121A]/50 border-[#1F1F2B] text-[#A1A1AA] hover:border-[#1F1F2B]/80 hover:bg-[#1F1F2B] hover:text-[#EAEAF0]'
+                        }`}
                     >
                       <div className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[9px] ${payerId === member.id.toString() ? 'bg-black/20 text-black' : 'bg-[#1F1F2B] text-[#EAEAF0]'}`}>
                         {member.name.charAt(0)}
@@ -431,15 +439,13 @@ const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMember
                           key={member.id}
                           type="button"
                           onClick={() => toggleParticipant(member.id)}
-                          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-[11px] font-bold active:scale-95 ${
-                            participantIds.includes(member.id)
-                              ? 'bg-[#A78BFA]/10 border-[#A78BFA]/40 text-[#EAEAF0] shadow-sm'
-                              : 'bg-white/5 border-transparent text-[#A1A1AA] hover:bg-white/10'
-                          }`}
+                          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-[11px] font-bold active:scale-95 ${participantIds.includes(member.id)
+                            ? 'bg-[#A78BFA]/10 border-[#A78BFA]/40 text-[#EAEAF0] shadow-sm'
+                            : 'bg-white/5 border-transparent text-[#A1A1AA] hover:bg-white/10'
+                            }`}
                         >
-                          <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] ${
-                             participantIds.includes(member.id) ? 'bg-[#A78BFA] text-black shadow-[0_0_8px_rgba(167,139,250,0.5)]' : 'bg-[#1F1F2B]'
-                          }`}>
+                          <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] ${participantIds.includes(member.id) ? 'bg-[#A78BFA] text-black shadow-[0_0_8px_rgba(167,139,250,0.5)]' : 'bg-[#1F1F2B]'
+                            }`}>
                             {member.name.charAt(0)}
                           </div>
                           {member.name.split(' ')[0]}
@@ -455,33 +461,33 @@ const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMember
                           if (!m) return null;
                           return (
                             <div key={m.id} className="flex items-center justify-between py-2.5 px-3 bg-white/[0.02] rounded-xl border border-transparent hover:border-white/5 transition-all">
-                               <div className="flex items-center gap-3">
-                                  <div className="w-6 h-6 rounded-lg bg-[#1F1F2B] flex items-center justify-center font-bold text-[10px] text-[#A1A1AA]">
-                                    {m.name.charAt(0)}
-                                  </div>
-                                  <span className="text-xs font-bold text-[#EAEAF0]">{m.name.split(' ')[0]}</span>
-                               </div>
-                               
-                               {splitMode === 'equal' ? (
-                                 <span className="text-xs font-black text-[#EAEAF0]">
-                                   ₹{((parseFloat(amount) || 0) / participantIds.length).toFixed(2)}
-                                 </span>
-                               ) : (
-                                 <div className="relative w-28 group">
-                                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A78BFA] text-[10px] font-black">
-                                     {splitMode === 'percentage' ? '%' : '₹'}
-                                   </span>
-                                   <input
-                                     type="number" step="0.01" placeholder="0"
-                                     className="w-full bg-[#09090B] border border-[#1F1F2B] group-hover:border-[#A1A1AA]/30 rounded-xl py-1.5 px-3 pl-6 text-xs font-black text-white focus:outline-none focus:border-[#A78BFA] focus:ring-1 focus:ring-[#A78BFA]/30 transition-all"
-                                     value={splitMode === 'percentage' ? (percentageSplits[m.id] || '') : (exactSplits[m.id] || '')}
-                                     onChange={(e) => {
-                                       if (splitMode === 'percentage') setPercentageSplits({ ...percentageSplits, [m.id]: e.target.value });
-                                       else setExactSplits({ ...exactSplits, [m.id]: e.target.value });
-                                     }}
-                                   />
-                                 </div>
-                               )}
+                              <div className="flex items-center gap-3">
+                                <div className="w-6 h-6 rounded-lg bg-[#1F1F2B] flex items-center justify-center font-bold text-[10px] text-[#A1A1AA]">
+                                  {m.name.charAt(0)}
+                                </div>
+                                <span className="text-xs font-bold text-[#EAEAF0]">{m.name.split(' ')[0]}</span>
+                              </div>
+
+                              {splitMode === 'equal' ? (
+                                <span className="text-xs font-black text-[#EAEAF0]">
+                                  {formatAmount((parseFloat(amount) || 0) / participantIds.length)}
+                                </span>
+                              ) : (
+                                <div className="relative w-28 group">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A78BFA] text-[10px] font-black">
+                                    {splitMode === 'percentage' ? '%' : currency.symbol}
+                                  </span>
+                                  <input
+                                    type="number" step="0.01" placeholder="0"
+                                    className="w-full bg-[#09090B] border border-[#1F1F2B] group-hover:border-[#A1A1AA]/30 rounded-xl py-1.5 px-3 pl-6 text-xs font-black text-white focus:outline-none focus:border-[#A78BFA] focus:ring-1 focus:ring-[#A78BFA]/30 transition-all"
+                                    value={splitMode === 'percentage' ? (percentageSplits[m.id] || '') : (exactSplits[m.id] || '')}
+                                    onChange={(e) => {
+                                      if (splitMode === 'percentage') setPercentageSplits({ ...percentageSplits, [m.id]: e.target.value });
+                                      else setExactSplits({ ...exactSplits, [m.id]: e.target.value });
+                                    }}
+                                  />
+                                </div>
+                              )}
                             </div>
                           )
                         })
@@ -500,7 +506,7 @@ const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMember
                         {remainingExact === 0 && remainingPct === 0 ? (
                           <>Matches total <CheckCircle2 size={14} /></>
                         ) : (
-                          <>Left: {splitMode === 'percentage' ? `${remainingPct.toFixed(1)}%` : `₹${remainingExact.toFixed(2)}`}</>
+                          <>Left: {splitMode === 'percentage' ? `${remainingPct.toFixed(1)}%` : formatAmount(remainingExact)}</>
                         )}
                       </span>
                     </div>
@@ -516,7 +522,7 @@ const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMember
                 <div className="bg-[#09090B] border border-[#1F1F2B] rounded-2xl p-5 space-y-5 shadow-xl">
                   <div className="flex items-center justify-between border-b border-white/5 pb-4">
                     <span className="text-xs font-bold text-[#A1A1AA] uppercase tracking-wider">Total</span>
-                    <span className="text-xl font-black text-white tracking-tight">₹{parsedAmt.toFixed(2)}</span>
+                    <span className="text-xl font-black text-white tracking-tight">{formatAmount(parsedAmt)}</span>
                   </div>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -524,21 +530,21 @@ const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMember
                         <div className="w-2 h-2 rounded-full bg-white opacity-40" />
                         <span className="text-xs font-semibold text-[#EAEAF0]">You paid</span>
                       </div>
-                      <span className="text-xs font-black text-[#EAEAF0]">₹{youPaid.toFixed(2)}</span>
+                      <span className="text-xs font-black text-[#EAEAF0]">{formatAmount(youPaid)}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-2 h-2 rounded-full bg-[#34D399] shadow-[0_0_8px_rgba(52,211,153,0.4)]" />
                         <span className="text-xs font-semibold text-[#34D399]">You get back</span>
                       </div>
-                      <span className="text-xs font-black text-[#34D399]">₹{youGetBack.toFixed(2)}</span>
+                      <span className="text-xs font-black text-[#34D399]">{formatAmount(youGetBack)}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]" />
                         <span className="text-xs font-semibold text-rose-500">You owe</span>
                       </div>
-                      <span className="text-xs font-black text-rose-500">₹{youOwe.toFixed(2)}</span>
+                      <span className="text-xs font-black text-rose-500">{formatAmount(youOwe)}</span>
                     </div>
                   </div>
                 </div>
@@ -546,16 +552,15 @@ const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMember
 
               <div className="space-y-4">
                 <label className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest ml-1 opacity-60">Receipt / Image</label>
-                <div 
-                  className={`border-2 border-dashed rounded-3xl flex flex-col items-center justify-center p-8 text-center transition-all cursor-pointer group ${
-                    receiptFile ? 'border-[#A78BFA] bg-[#A78BFA]/5' : 'border-[#1F1F2B] bg-[#09090B] hover:border-[#A78BFA]/40 hover:bg-[#A78BFA]/5'
-                  }`}
+                <div
+                  className={`border-2 border-dashed rounded-3xl flex flex-col items-center justify-center p-8 text-center transition-all cursor-pointer group ${receiptFile ? 'border-[#A78BFA] bg-[#A78BFA]/5' : 'border-[#1F1F2B] bg-[#09090B] hover:border-[#A78BFA]/40 hover:bg-[#A78BFA]/5'
+                    }`}
                   onClick={() => document.getElementById('receipt-upload')?.click()}
                 >
-                  <input 
-                    type="file" 
-                    id="receipt-upload" 
-                    className="hidden" 
+                  <input
+                    type="file"
+                    id="receipt-upload"
+                    className="hidden"
                     accept="image/png, image/jpeg, application/pdf"
                     onChange={(e) => {
                       if (e.target.files && e.target.files[0]) {
@@ -570,7 +575,7 @@ const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMember
                       </div>
                       <p className="text-xs font-bold text-[#EAEAF0] truncate max-w-[180px] mb-1">{receiptFile.name}</p>
                       <p className="text-[10px] text-[#A1A1AA] font-bold">{(receiptFile.size / 1024 / 1024).toFixed(2)} MB</p>
-                      <button 
+                      <button
                         type="button"
                         className="mt-4 text-[10px] font-black text-rose-500 uppercase tracking-widest hover:text-rose-400 active:scale-95 transition-all"
                         onClick={(e) => {
@@ -599,17 +604,17 @@ const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMember
         {/* STICKY FOOTER ACTION AREA */}
         <div className="p-6 bg-[#09090B]/95 backdrop-blur-md border-t border-white/5 z-20 shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.4)]">
           <div className="max-w-2xl mx-auto flex gap-4">
-            <button 
-              type="button" 
-              onClick={onClose} 
+            <button
+              type="button"
+              onClick={onClose}
               className="flex-1 py-4 rounded-2xl font-bold text-[#A1A1AA] hover:text-white bg-white/5 hover:bg-white/10 transition-all text-sm active:scale-95"
             >
               Cancel
             </button>
-            <button 
-              type="submit" 
-              form="expense-form" 
-              disabled={isLoading} 
+            <button
+              type="submit"
+              form="expense-form"
+              disabled={isLoading}
               className="flex-[2] py-4 btn-primary rounded-2xl font-black text-sm flex items-center justify-center gap-3 disabled:opacity-50 active:scale-95 shadow-[0_10px_25px_rgba(167,139,250,0.3)]"
             >
               {isLoading ? (

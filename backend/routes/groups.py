@@ -14,6 +14,7 @@ router = APIRouter()
 async def create_new_group(
     name: Annotated[str, Form(...)],
     description: Annotated[Optional[str], Form()] = None,
+    currency: Annotated[Optional[str], Form()] = "INR",
     avatar_file: Annotated[Optional[UploadFile], File()] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -42,7 +43,7 @@ async def create_new_group(
             print(f"Error saving avatar: {e}")
             # Continue without avatar if it fails
         
-    group_data = GroupCreate(name=name, description=description)
+    group_data = GroupCreate(name=name, description=description, currency=currency)
     return create_group(db, current_user.id, group_data, avatar=avatar_url)
 
 @router.post("/{group_id}/add-member", status_code=status.HTTP_201_CREATED)
@@ -87,7 +88,8 @@ def list_my_groups(db: Session = Depends(get_db), current_user: User = Depends(g
         recent_exp = db.query(Expense).filter(Expense.group_id == g.id).order_by(Expense.created_at.desc()).first()
         if recent_exp:
             payer_name = "You" if recent_exp.payer_id == current_user.id else recent_exp.payer.name.split(" ")[0]
-            last_activity = f"{payer_name} paid ₹{recent_exp.amount:g} • {time_ago(recent_exp.created_at)}"
+            curr_symbol = "₹" if getattr(recent_exp, 'currency', 'INR') == "INR" else "रु "
+            last_activity = f"{payer_name} paid {curr_symbol}{recent_exp.amount:g} • {time_ago(recent_exp.created_at)}"
             
         result.append({
             "id": g.id,

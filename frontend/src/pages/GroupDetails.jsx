@@ -9,6 +9,7 @@ import api from '../services/api';
 import { getCurrentUser } from '../services/auth';
 import { useToast } from '../contexts/ToastContext';
 import { useHeader } from '../contexts/HeaderContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 
 const GroupDetails = () => {
   const { id } = useParams();
@@ -25,6 +26,7 @@ const GroupDetails = () => {
   const [editingExpense, setEditingExpense] = useState(null);
   const { showToast } = useToast();
   const { setTitle, setActions } = useHeader();
+  const { currency, formatAmount } = useCurrency();
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -65,13 +67,13 @@ const GroupDetails = () => {
         { label: 'Add Members', icon: UserPlus, onClick: () => setIsMemberModalOpen(true) },
         { label: 'Settle Up', icon: HandCoins, onClick: () => setIsSettleModalOpen(true) },
       ];
-      
+
       if (isCreator) {
         headerActions.push({ label: 'Delete Group', icon: Trash, onClick: handleDeleteGroup, danger: true });
       } else {
         headerActions.push({ label: 'Leave Group', icon: LogOut, onClick: handleLeaveGroup, danger: true });
       }
-      
+
       setActions(headerActions);
     }
   }, [group, currentUser, setTitle, setActions]);
@@ -92,8 +94,8 @@ const GroupDetails = () => {
 
   const handleEditExpense = (e, exp) => {
     e.stopPropagation();
-    window.dispatchEvent(new CustomEvent('OPEN_ADD_ACTION', { 
-      detail: { groupId: id, members: group.members.map(m => m.user), editExpense: exp } 
+    window.dispatchEvent(new CustomEvent('OPEN_ADD_ACTION', {
+      detail: { groupId: id, members: group.members.map(m => m.user), editExpense: exp }
     }));
   };
 
@@ -179,7 +181,7 @@ const GroupDetails = () => {
                 <LogOut size={18} />
               </button>
             ))}
-            
+
             <button
               onClick={() => setIsSettleModalOpen(true)}
               className="hidden md:flex items-center justify-center px-5 h-11 bg-[#09090B] border border-[#1F1F2B] text-[#A78BFA] hover:bg-[#1A1A24] font-semibold text-sm rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-95"
@@ -189,8 +191,8 @@ const GroupDetails = () => {
             </button>
             <button
               onClick={() => {
-                window.dispatchEvent(new CustomEvent('OPEN_ADD_ACTION', { 
-                  detail: { groupId: id, members: group.members.map(m => m.user) } 
+                window.dispatchEvent(new CustomEvent('OPEN_ADD_ACTION', {
+                  detail: { groupId: id, members: group.members.map(m => m.user) }
                 }));
               }}
               className="hidden md:flex btn-primary px-5 h-11 text-sm rounded-xl shadow-[0_0_20px_rgba(167,139,250,0.15)]"
@@ -231,7 +233,7 @@ const GroupDetails = () => {
                 {isLoading ? (
                   <div className="w-24 h-9 bg-[#1F1F2B] rounded animate-pulse" />
                 ) : (
-                  <p className="text-3xl font-semibold text-[#EAEAF0] tracking-tight">₹{personalOwedToYou.toLocaleString()}</p>
+                  <p className="text-3xl font-semibold text-[#EAEAF0] tracking-tight">{formatAmount(personalOwedToYou)}</p>
                 )}
               </div>
               <div className="w-12 h-12 bg-[#09090B] border border-[#1F1F2B] text-[#A78BFA] rounded-full flex items-center justify-center group-hover:border-[#A78BFA]/30 transition-all duration-200">
@@ -244,7 +246,7 @@ const GroupDetails = () => {
                 {isLoading ? (
                   <div className="w-24 h-9 bg-[#1F1F2B] rounded animate-pulse" />
                 ) : (
-                  <p className="text-3xl font-semibold text-[#EAEAF0] tracking-tight">₹{personalYouOwe.toLocaleString()}</p>
+                  <p className="text-3xl font-semibold text-[#EAEAF0] tracking-tight">{formatAmount(personalYouOwe)}</p>
                 )}
               </div>
               <div className="w-12 h-12 bg-[#09090B] border border-[#1F1F2B] text-[#A78BFA] rounded-full flex items-center justify-center group-hover:border-[#A78BFA]/30 transition-all duration-200">
@@ -278,8 +280,8 @@ const GroupDetails = () => {
                   <p className="text-[#A1A1AA] mt-2 mb-6 max-w-xs mx-auto text-sm">Add an expense to start splitting costs with the group.</p>
                   <button
                     onClick={() => {
-                      window.dispatchEvent(new CustomEvent('OPEN_ADD_ACTION', { 
-                        detail: { groupId: id, members: group.members.map(m => m.user) } 
+                      window.dispatchEvent(new CustomEvent('OPEN_ADD_ACTION', {
+                        detail: { groupId: id, members: group.members.map(m => m.user) }
                       }));
                     }}
                     className="btn-primary px-6 py-2.5 h-auto text-sm rounded-xl"
@@ -308,22 +310,27 @@ const GroupDetails = () => {
                         </div>
                       </div>
                       <div className="text-right flex flex-col items-end">
-                        <p className="text-xl font-semibold text-[#EAEAF0]">₹{exp.amount.toLocaleString()}</p>
-                        
+                        <p className="text-xl font-semibold text-[#EAEAF0]">{formatAmount(exp.amount, exp.currency)}</p>
+                        {exp.currency !== currency.code && (
+                          <p className="text-[10px] text-[#A1A1AA] font-bold mt-1 uppercase tracking-tight opacity-50">
+                            ≈ {exp.currency === 'INR' ? '₹' : 'रु'}{exp.amount.toFixed(2)}
+                          </p>
+                        )}
+
                         {(exp.payer_id === currentUser?.id || group?.created_by === currentUser?.id) && (
                           <div className="flex items-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0 duration-200">
-                             <button
-                               onClick={(e) => handleEditExpense(e, exp)}
-                               className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#1F1F2B] text-purple-400 hover:bg-purple-500/20 transition-colors"
-                             >
-                                <Pencil size={14} />
-                             </button>
-                             <button
-                               onClick={(e) => handleDeleteExpense(e, exp.id)}
-                               className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#1F1F2B] text-red-500 hover:bg-red-500/20 transition-colors"
-                             >
-                                <Trash2 size={14} />
-                             </button>
+                            <button
+                              onClick={(e) => handleEditExpense(e, exp)}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#1F1F2B] text-purple-400 hover:bg-purple-500/20 transition-colors"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                            <button
+                              onClick={(e) => handleDeleteExpense(e, exp.id)}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#1F1F2B] text-red-500 hover:bg-red-500/20 transition-colors"
+                            >
+                              <Trash2 size={14} />
+                            </button>
                           </div>
                         )}
                       </div>
@@ -388,7 +395,7 @@ const GroupDetails = () => {
                           </div>
 
                           <div className="flex flex-col items-end">
-                            <p className={`text-2xl font-semibold ${isYouInvolved ? 'text-[#A78BFA]' : 'text-[#EAEAF0]'}`}>₹{s.amount.toLocaleString()}</p>
+                            <p className={`text-2xl font-semibold ${isYouInvolved ? 'text-[#A78BFA]' : 'text-[#EAEAF0]'}`}>{formatAmount(s.amount)}</p>
                             {isYouInvolved && (
                               <button className={`mt-3 px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-95 ${youAreDebtor
                                 ? 'bg-[#1F1F2B] text-[#EAEAF0] hover:bg-[#1F1F2B]/80'

@@ -1,27 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Search, User, Plus, Users, Settings, LogOut, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, Users } from 'lucide-react';
 import { useSearch } from '../contexts/SearchContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { logout } from '../services/auth';
 import CreateGroupModal from './CreateGroupModal';
 
 const TopNavbar = () => {
   const { searchQuery, setSearchQuery } = useSearch();
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
-  const dropdownRef = useRef(null);
   const navigate = useNavigate();
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   // Keyboard shortcut for search
   useEffect(() => {
@@ -39,96 +25,54 @@ const TopNavbar = () => {
     window.dispatchEvent(new CustomEvent('OPEN_ADD_ACTION'));
   };
 
-  const handleLogout = () => {
-    logout(navigate);
-  };
-
   return (
     <>
-      <header className="hidden lg:flex fixed top-0 left-0 w-full h-[72px] items-center justify-between bg-[#09090B]/80 backdrop-blur-xl border-b border-[#1F1F2B] z-50 px-6">
+      <header className="hidden lg:flex fixed top-0 left-0 w-full h-[64px] bg-[#09090B]/80 backdrop-blur-md border-b border-white/[0.05] z-50">
+        <div className="max-w-[1400px] mx-auto w-full px-8 flex items-center justify-between">
+          {/* Left: Branding */}
+          <div className="flex items-center w-[200px] lg:w-60 shrink-0">
+            <Link to="/dashboard" className="flex items-center gap-2.5 hover:opacity-80 transition-all group">
+              <div className="w-8 h-8 bg-gradient-to-tr from-[#A78BFA] to-[#8B5CF6] rounded-lg flex items-center justify-center shadow-lg shadow-[#A78BFA]/20 group-hover:scale-105 transition-transform duration-300">
+                <span className="text-black font-black text-xs">S</span>
+              </div>
+              <span className="text-[22px] font-extrabold tracking-tight text-white">SplitIt</span>
+            </Link>
+          </div>
 
-        {/* Left: Logo */}
-        <div className="flex items-center gap-3 w-64 shrink-0">
-          <Link to="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="w-8 h-8 bg-gradient-to-tr from-[#A78BFA] to-[#C4B5FD] rounded-xl flex items-center justify-center font-bold text-lg text-black shadow-[0_0_15px_rgba(167,139,250,0.3)]">
-              S
-            </div>
-            <span className="text-xl font-bold tracking-tight text-[#EAEAF0]">SplitIt</span>
-          </Link>
-        </div>
-
-        {/* Center: Search */}
-        <div className="flex-1 max-w-xl px-4">
-          <div className="relative group flex items-center">
-            <Search className="absolute left-4 text-[#A1A1AA] group-focus-within:text-[#A78BFA] transition-colors duration-200" size={18} />
-            <input
-              id="desktop-search"
-              type="text"
-              placeholder="Search for groups, friends or expenses..."
-              className="w-full bg-[#12121A] border border-[#1F1F2B] rounded-2xl pl-11 pr-14 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#A78BFA]/50 focus:border-[#A78BFA]/50 transition-all duration-300 font-medium placeholder:text-[#A1A1AA] text-[#EAEAF0] shadow-[0_2px_10px_rgba(0,0,0,0.2)] group-focus-within:shadow-[0_4px_20px_rgba(167,139,250,0.1)]"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <div className="absolute right-4 flex items-center pointer-events-none">
-              <span className="text-[10px] font-bold text-[#A1A1AA] bg-[#1F1F2B] px-1.5 py-0.5 rounded uppercase tracking-wider">⌘K</span>
+          {/* Center: Search */}
+          <div className="flex-1 max-w-[320px] px-4">
+            <div className="relative group flex items-center">
+              <Search className="absolute left-3.5 text-white/40 group-focus-within:text-[#A78BFA] transition-colors duration-300" size={14} />
+              <input
+                id="desktop-search"
+                type="text"
+                placeholder="Search..."
+                className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl pl-10 pr-12 py-1.5 text-[13px] focus:outline-none focus:border-[#A78BFA]/30 focus:bg-white/[0.05] transition-all duration-300 font-medium placeholder:text-white/20 text-white shadow-sm"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <div className="absolute right-3 flex items-center pointer-events-none opacity-40">
+                <span className="text-[9px] font-bold text-white/30 border border-white/[0.1] px-1.5 py-0.5 rounded uppercase tracking-wider bg-white/[0.02]">⌘K</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Right: Actions */}
-        <div className="flex items-center gap-5 shrink-0">
-
-          <div className="flex items-center gap-2">
+          {/* Right: Actions */}
+          <div className="flex items-center gap-3 shrink-0">
             <button
               onClick={() => setIsGroupModalOpen(true)}
-              className="h-[38px] px-3 flex items-center gap-2 rounded-xl text-[#A1A1AA] hover:text-[#EAEAF0] hover:bg-[#12121A] border border-transparent hover:border-[#1F1F2B] transition-all font-semibold text-xs active:scale-95"
-              title="Create Group"
+              className="h-8 px-4 flex items-center gap-2 rounded-xl text-white/50 hover:text-white hover:bg-white/[0.05] transition-all font-semibold text-[12px] active:scale-95 border border-transparent hover:border-white/[0.05]"
             >
-              <Users size={16} />
+              <Users size={14} />
               <span>New Group</span>
             </button>
             <button
               onClick={handleAddExpense}
-              className="h-[38px] px-4 flex items-center gap-1.5 rounded-xl bg-gradient-to-tr from-[#A78BFA] to-indigo-500 text-black font-bold text-xs shadow-[0_4px_15px_rgba(167,139,250,0.25)] hover:shadow-[0_6px_20px_rgba(167,139,250,0.4)] hover:scale-[1.02] active:scale-95 transition-all"
+              className="h-8 px-5 flex items-center gap-2 rounded-xl bg-[#A78BFA] text-black font-bold text-[12px] uppercase tracking-wider shadow-[0_0_20px_rgba(167,139,250,0.15)] hover:brightness-110 hover:shadow-[0_0_25px_rgba(167,139,250,0.25)] active:scale-95 transition-all duration-300"
             >
-              <Plus size={16} strokeWidth={3} />
+              <Plus size={14} strokeWidth={3} />
               <span>Add Expense</span>
             </button>
-          </div>
-
-          <div className="w-px h-6 bg-[#1F1F2B] mx-1" />
-
-          <div className="flex items-center gap-3 relative" ref={dropdownRef}>
-            <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center gap-2 pl-2 pr-1 py-1 rounded-xl hover:bg-[#12121A] transition-colors"
-            >
-              <div className="w-9 h-9 bg-gradient-to-tr from-[#A78BFA] to-[#C4B5FD] rounded-xl flex items-center justify-center shadow-[0_2px_10px_rgba(167,139,250,0.2)]">
-                <User size={18} className="text-black" />
-              </div>
-              <ChevronDown size={14} className={`text-[#A1A1AA] transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
-            </button>
-
-            {/* Dropdown Menu */}
-            {isDropdownOpen && (
-              <div className="absolute top-full right-0 mt-3 w-48 bg-[#09090B] border border-[#1F1F2B] rounded-2xl shadow-2xl shadow-black overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                <div className="p-2 space-y-1">
-                  <Link to="/profile" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#A1A1AA] hover:text-[#EAEAF0] hover:bg-[#12121A] transition-colors">
-                    <User size={16} /> Profile
-                  </Link>
-                  <Link to="/settings" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#A1A1AA] hover:text-[#EAEAF0] hover:bg-[#12121A] transition-colors">
-                    <Settings size={16} /> Settings
-                  </Link>
-                  <div className="w-full h-px bg-[#1F1F2B] my-1" />
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-rose-400 hover:bg-rose-500/10 transition-colors text-left"
-                  >
-                    <LogOut size={16} /> Logout
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </header>

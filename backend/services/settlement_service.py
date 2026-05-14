@@ -6,6 +6,7 @@ from backend.models.expense import Expense, Split
 from backend.models.group import GroupMember
 from backend.services.expense_service import calculate_group_balances
 from backend.schemas.settlement import SimplifiedSettlement, SettlementCreate
+from backend.utils.currency import convert_currency
 
 def calculate_optimized_settlements(db: Session, group_id: int):
     """
@@ -22,19 +23,21 @@ def calculate_optimized_settlements(db: Session, group_id: int):
     # Adjustment = Settlements Paid - Settlements Received
     final_balances = []
     for b in base_balances:
-        # Settlements where this user paid
-        total_paid_settlements = db.query(func.sum(Settlement.amount)).filter(
+        # Settlements where this user paid (Normalized to INR)
+        paid_settlements = db.query(Settlement).filter(
             Settlement.group_id == group_id,
             Settlement.from_user_id == b.user_id
-        ).scalar() or 0.0
+        ).all()
+        total_paid_inr = sum(convert_currency(s.amount, getattr(s, 'currency', 'INR') or 'INR', "INR") for s in paid_settlements)
         
-        # Settlements where this user received money
-        total_received_settlements = db.query(func.sum(Settlement.amount)).filter(
+        # Settlements where this user received money (Normalized to INR)
+        received_settlements = db.query(Settlement).filter(
             Settlement.group_id == group_id,
             Settlement.to_user_id == b.user_id
-        ).scalar() or 0.0
+        ).all()
+        total_received_inr = sum(convert_currency(s.amount, getattr(s, 'currency', 'INR') or 'INR', "INR") for s in received_settlements)
         
-        adjusted_balance = b.net_balance + total_paid_settlements - total_received_settlements
+        adjusted_balance = b.net_balance + total_paid_inr - total_received_inr
         
         # We'll use a dict for the algorithm
         final_balances.append({
@@ -67,7 +70,8 @@ def calculate_optimized_settlements(db: Session, group_id: int):
                 from_user_name=debtor["user_name"],
                 to_user_id=creditor["user_id"],
                 to_user_name=creditor["user_name"],
-                amount=round(amount, 2)
+                amount=round(amount, 2),
+                currency="INR"
             ))
             
             debtor["balance"] += amount
@@ -87,6 +91,7 @@ def record_settlement(db: Session, settlement_data: SettlementCreate):
         from_user_id=settlement_data.from_user_id,
         to_user_id=settlement_data.to_user_id,
         amount=settlement_data.amount,
+        currency=settlement_data.currency,
         status="paid"
     )
     db.add(new_settlement)

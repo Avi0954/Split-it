@@ -4,22 +4,27 @@ import Layout from '../components/Layout';
 import { getCurrentUser, logout } from '../services/auth';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { useCurrency } from '../contexts/CurrencyContext';
 
 const Profile = () => {
   const [user, setUser] = useState(null);
   const [groups, setGroups] = useState([]);
+  const [stats, setStats] = useState({ total_owed: 0, total_owing: 0 });
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { currency, setCurrency, formatAmount, CURRENCIES } = useCurrency();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [userData, groupsRes] = await Promise.all([
+        const [userData, groupsRes, statsRes] = await Promise.all([
           getCurrentUser(),
-          api.get('/groups/')
+          api.get('/groups/'),
+          api.get('/dashboard/')
         ]);
         setUser(userData);
         setGroups(groupsRes.data);
+        setStats(statsRes.data);
       } catch (err) {
         console.error('Failed to fetch profile data', err);
       } finally {
@@ -88,7 +93,7 @@ const Profile = () => {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-[#A1A1AA] text-sm font-medium mb-1 uppercase tracking-wider text-[11px]">Total Receivables</p>
-                <h3 className="text-3xl font-bold text-[#A78BFA] tracking-tight">₹0.00</h3>
+                <h3 className="text-3xl font-bold text-[#A78BFA] tracking-tight">{formatAmount(stats.total_owed)}</h3>
               </div>
               <div className="p-3 bg-[#09090B] border border-[#1F1F2B] text-[#A78BFA] rounded-xl group-hover:scale-[1.05] transition-transform">
                 <TrendingUp size={20} strokeWidth={2.5} />
@@ -100,12 +105,40 @@ const Profile = () => {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-[#A1A1AA] text-sm font-medium mb-1 uppercase tracking-wider text-[11px]">Total Liabilities</p>
-                <h3 className="text-3xl font-bold text-[#EAEAF0] tracking-tight">₹0.00</h3>
+                <h3 className="text-3xl font-bold text-[#EAEAF0] tracking-tight">{formatAmount(stats.total_owing)}</h3>
               </div>
               <div className="p-3 bg-[#09090B] border border-[#1F1F2B] text-[#EAEAF0] rounded-xl group-hover:scale-[1.05] transition-transform">
                 <TrendingDown size={20} strokeWidth={2.5} />
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Preferences Section */}
+        <div className="card bg-[#12121A] border border-[#1F1F2B] p-6 rounded-2xl space-y-4 shadow-[0_4px_15px_rgba(0,0,0,0.3)]">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-[#EAEAF0] tracking-tight">Display Currency</h3>
+              <p className="text-[#A1A1AA] text-sm font-medium">Choose your preferred currency for all financial views.</p>
+            </div>
+          </div>
+          
+          <div className="flex gap-3">
+            {CURRENCIES.map((curr) => (
+              <button
+                key={curr.code}
+                onClick={() => setCurrency(curr)}
+                className={`flex-1 flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-300 group ${
+                  currency.code === curr.code
+                    ? 'bg-[#A78BFA]/10 border-[#A78BFA] text-[#A78BFA] shadow-[0_0_15px_rgba(167,139,250,0.1)]'
+                    : 'bg-[#09090B] border-[#1F1F2B] text-[#A1A1AA] hover:border-[#1F1F2B]/80 hover:bg-[#12121A]'
+                }`}
+              >
+                <span className="text-2xl font-bold mb-1 group-hover:scale-110 transition-transform">{curr.symbol}</span>
+                <span className="text-xs font-bold uppercase tracking-widest">{curr.name}</span>
+                <span className="text-[10px] opacity-40 mt-0.5">({curr.code})</span>
+              </button>
+            ))}
           </div>
         </div>
 

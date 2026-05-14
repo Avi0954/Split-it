@@ -5,6 +5,7 @@ from backend.models.expense import Expense, Split
 from backend.models.group import Group, GroupMember
 from backend.models.user import User
 from backend.schemas.expense import ExpenseCreate, UserBalance
+from backend.utils.currency import convert_currency
 
 def create_expense(db: Session, group_id: int, expense_data: ExpenseCreate):
     """
@@ -54,6 +55,7 @@ def create_expense(db: Session, group_id: int, expense_data: ExpenseCreate):
     new_expense = Expense(
         description=expense_data.description,
         amount=expense_data.amount,
+        currency=expense_data.currency,
         payer_id=expense_data.payer_id,
         group_id=group_id
     )
@@ -90,23 +92,33 @@ def calculate_group_balances(db: Session, group_id: int):
     for membership in memberships:
         user = membership.user
         
-        # Calculate how much this user has paid in this group
-        total_paid = db.query(func.sum(Expense.amount)).filter(
+        # Calculate how much this user has paid in this group (Normalized to INR)
+        expenses_paid = db.query(Expense).filter(
             Expense.group_id == group_id,
             Expense.payer_id == user.id
-        ).scalar() or 0.0
+        ).all()
         
-        # Calculate how much this user owes in this group
-        # Join Split with Expense to filter by group_id
-        total_owed = db.query(func.sum(Split.amount_owed)).join(Expense).filter(
+        total_paid_inr = 0.0
+        for e in expenses_paid:
+            curr = getattr(e, 'currency', 'INR') or "INR"
+            total_paid_inr += convert_currency(e.amount, curr, "INR")
+        
+        # Calculate how much this user owes in this group (Normalized to INR)
+        splits_owed = db.query(Split).join(Expense).filter(
             Expense.group_id == group_id,
             Split.user_id == user.id
-        ).scalar() or 0.0
+        ).all()
+        
+        total_owed_inr = 0.0
+        for s in splits_owed:
+            # Safe access for currency in case relationship or field is missing
+            curr = getattr(s.expense, 'currency', 'INR') or "INR"
+            total_owed_inr += convert_currency(s.amount_owed, curr, "INR")
         
         results.append(UserBalance(
             user_id=user.id,
             user_name=user.name,
-            net_balance=total_paid - total_owed
+            net_balance=total_paid_inr - total_owed_inr
         ))
         
     return results
@@ -151,6 +163,7 @@ def update_expense(db: Session, group_id: int, expense_id: int, expense_data: Ex
     # Update base fields
     expense.description = expense_data.description
     expense.amount = expense_data.amount
+    expense.currency = expense_data.currency
     expense.payer_id = expense_data.payer_id
     
     # Update splits: delete old and recreate

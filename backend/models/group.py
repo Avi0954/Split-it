@@ -10,6 +10,7 @@ class Group(Base):
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
     avatar = Column(String, nullable=True)
+    currency = Column(String, default="INR")
     created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 

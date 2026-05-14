@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  ArrowLeft, Search, Bell, User, X, Menu, Home,
-  Users, Activity, Settings, CreditCard, Sliders,
-  HelpCircle, UserPlus, LogOut, ChevronRight, Clock
+  ArrowLeft, Search, Bell, User, X,
+  Activity, Settings, CreditCard,
+  LogOut, ChevronRight, Clock, Users
 } from 'lucide-react';
 import { useSearch } from '../contexts/SearchContext';
 import { logout, getCurrentUser } from '../services/auth';
 import api from '../services/api';
 import { useHeader } from '../contexts/HeaderContext';
 import { MoreVertical } from 'lucide-react';
+import { useCurrency } from '../contexts/CurrencyContext';
 
 const MobileTopNavbar = () => {
   const navigate = useNavigate();
@@ -20,9 +21,12 @@ const MobileTopNavbar = () => {
   const actionMenuRef = useRef(null);
   const pathname = location.pathname;
 
-  // Drawer and Search States
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  // Search and Settings States
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [isSettingsSheetOpen, setIsSettingsSheetOpen] = useState(false);
+  const [isCurrencySelectorOpen, setIsCurrencySelectorOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
+  const { currency, setCurrency, CURRENCIES } = useCurrency();
 
   // Search Data & User States
   const [groups, setGroups] = useState([]);
@@ -31,33 +35,13 @@ const MobileTopNavbar = () => {
   const [isLoadingSearchData, setIsLoadingSearchData] = useState(false);
   const [recentSearches, setRecentSearches] = useState(['Goa Trip', 'Avni', 'Dinner']);
 
-  // Swipe Gesture Ref
-  const touchStart = useRef(null);
-  const touchEnd = useRef(null);
-  const minSwipeDistance = 50;
+  // Detect if current page is a top-level tab (no back button needed)
+  const isTopLevelPage = ['/dashboard', '/groups', '/friends', '/activity', '/profile', '/settings'].includes(pathname);
 
-  // Detect if current page is the Dashboard (Home)
-  const isHomePage = pathname === '/dashboard';
-
-  // Helper to get page title based on route
-  const getPageTitle = () => {
-    if (contextTitle) return contextTitle;
-    const titles = {
-      '/dashboard': 'Dashboard',
-      '/groups': 'Groups',
-      '/activity': 'Activity',
-      '/profile': 'Profile',
-      '/friends': 'Friends',
-      '/settings': 'Settings'
-    };
-    if (pathname.includes('/groups/')) return 'Group Details';
-    return titles[pathname] || 'SplitIt';
-  };
-
-  // Prevent background scrolling when search or drawer is open
+  // Prevent background scrolling when search or settings sheet is open
   useEffect(() => {
     const mainElement = document.querySelector('main');
-    if (isSearchExpanded || isDrawerOpen) {
+    if (isSearchExpanded || isSettingsSheetOpen) {
       document.body.style.overflow = 'hidden';
       if (mainElement) mainElement.style.overflow = 'hidden';
     } else {
@@ -68,7 +52,7 @@ const MobileTopNavbar = () => {
       document.body.style.overflow = 'auto';
       if (mainElement) mainElement.style.overflow = 'auto';
     };
-  }, [isSearchExpanded, isDrawerOpen]);
+  }, [isSearchExpanded, isSettingsSheetOpen]);
 
   // Fetch search data & user profile
   useEffect(() => {
@@ -98,25 +82,6 @@ const MobileTopNavbar = () => {
     }
   }, [isSearchExpanded, groups.length, friends.length]);
 
-  // Swipe handlers
-  const onTouchStart = (e) => {
-    touchEnd.current = null;
-    touchStart.current = e.targetTouches[0].clientX;
-  };
-
-  const onTouchMove = (e) => {
-    touchEnd.current = e.targetTouches[0].clientX;
-  };
-
-  const onTouchEnd = () => {
-    if (!touchStart.current || !touchEnd.current) return;
-    const distance = touchStart.current - touchEnd.current;
-    const isLeftSwipe = distance > minSwipeDistance;
-    if (isLeftSwipe) {
-      setIsDrawerOpen(false);
-    }
-  };
-
   const handleLogout = () => {
     logout(navigate);
   };
@@ -132,185 +97,71 @@ const MobileTopNavbar = () => {
   const filteredGroups = (groups || []).filter(g => (g?.name || "").toLowerCase().includes(normalizedQuery));
   const filteredFriends = (friends || []).filter(f => (f?.name || "").toLowerCase().includes(normalizedQuery));
 
-  const DrawerLink = ({ icon: Icon, label, path, onClick, danger }) => {
-    const isActive = pathname === path;
-    return (
-      <div
-        onClick={() => {
-          if (onClick) onClick();
-          else if (path) {
-            navigate(path);
-            setIsDrawerOpen(false);
-          }
-        }}
-        className={`flex items-center justify-between p-3.5 rounded-xl cursor-pointer transition-all active:scale-[0.98] relative group ${isActive
-          ? 'bg-[#A78BFA]/10 text-[#A78BFA]'
-          : danger
-            ? 'hover:bg-rose-500/10 text-rose-500'
-            : 'hover:bg-[#1A1A24] text-[#EAEAF0]'
-          }`}
-      >
-        {isActive && (
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#A78BFA] rounded-r-full" />
-        )}
-        <div className="flex items-center gap-3">
-          <Icon size={20} className={isActive ? 'text-[#A78BFA]' : danger ? 'text-rose-500' : 'text-[#A1A1AA]'} />
-          <span className="font-semibold text-sm">{label}</span>
-        </div>
-        {!danger && <ChevronRight size={14} className={isActive ? 'text-[#A78BFA]' : 'text-[#1F1F2B] group-hover:text-[#A1A1AA] transition-colors'} />}
-      </div>
-    );
-  };
-
   return (
     <>
-      <nav className="lg:hidden relative h-16 bg-[#09090B]/90 backdrop-blur-xl border-b border-[#1F1F2B] z-40 px-4 flex items-center justify-between transition-all duration-300 shadow-md">
-        {!isHomePage && !['/groups', '/friends', '/activity', '/profile', '/settings'].includes(pathname) ? (
-          <>
+      <nav className="lg:hidden sticky top-0 h-[64px] bg-[#09090B]/90 backdrop-blur-xl border-b border-white/[0.01] z-40 px-6 flex items-center justify-between transition-all duration-300">
+        {/* Left Side: Back Button + Branding */}
+        <div className="flex items-center gap-4">
+          {!isTopLevelPage && (
             <button
               onClick={() => navigate(-1)}
-              className="w-10 h-10 flex items-center justify-center bg-[#1F1F2B]/50 hover:bg-[#1F1F2B] rounded-full text-[#EAEAF0] active:scale-95 transition-all"
+              className="w-8 h-8 flex items-center justify-center bg-white/[0.03] border border-white/[0.05] rounded-full text-[#A1A1AA] hover:text-white active:scale-95 transition-all -ml-1"
             >
-              <ArrowLeft size={20} />
+              <ArrowLeft size={14} />
             </button>
-            <h1 className="text-base font-bold text-[#EAEAF0] tracking-tight truncate px-2">
-              {getPageTitle()}
-            </h1>
-            
-            {/* Contextual Action Menu */}
+          )}
+          <span
+            className="text-[14px] font-black tracking-[0.12em] uppercase text-white cursor-pointer hover:text-[#A78BFA] transition-colors leading-none"
+            onClick={() => navigate('/dashboard')}
+          >
+            SplitIt
+          </span>
+        </div>
+
+        {/* Right Side: Profile / Actions */}
+        <div className="flex items-center justify-end">
+          {!isTopLevelPage && actions && actions.length > 0 ? (
             <div className="relative" ref={actionMenuRef}>
-              {actions && actions.length > 0 ? (
-                <>
-                  <button
-                    onClick={() => setIsActionMenuOpen(!isActionMenuOpen)}
-                    className="w-10 h-10 flex items-center justify-center bg-[#1F1F2B]/50 hover:bg-[#1F1F2B] rounded-full text-[#EAEAF0] active:scale-95 transition-all"
-                  >
-                    <MoreVertical size={20} />
-                  </button>
-                  {isActionMenuOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-48 bg-[#12121A] border border-[#1F1F2B] rounded-2xl shadow-2xl z-[110] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                      <div className="p-2 space-y-1">
-                        {actions.map((action, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => {
-                              action.onClick();
-                              setIsActionMenuOpen(false);
-                            }}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left ${
-                              action.danger ? 'text-red-400 hover:bg-red-500/10' : 'text-[#A1A1AA] hover:text-[#EAEAF0] hover:bg-[#1F1F2B]'
-                            }`}
-                          >
-                            {action.icon && <action.icon size={16} />}
-                            {action.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="w-10 h-10" />
+              <button
+                onClick={() => setIsActionMenuOpen(!isActionMenuOpen)}
+                className="w-8 h-8 flex items-center justify-center bg-white/[0.03] border border-white/[0.05] rounded-full text-[#A1A1AA] hover:text-white active:scale-95 transition-all"
+              >
+                <MoreVertical size={14} />
+              </button>
+              {isActionMenuOpen && (
+                <div className="absolute right-0 top-full mt-3 w-48 bg-[#12121A] border border-white/[0.05] rounded-2xl shadow-2xl z-[110] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="p-2 space-y-1">
+                    {actions.map((action, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          action.onClick();
+                          setIsActionMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors text-left ${action.danger ? 'text-red-400 hover:bg-red-500/10' : 'text-[#A1A1AA] hover:text-[#EAEAF0] hover:bg-white/[0.03]'
+                          }`}
+                      >
+                        {action.icon && <action.icon size={14} />}
+                        {action.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
-          </>
-        ) : (
-          <>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsDrawerOpen(true)}
-                className="w-10 h-10 flex items-center justify-center bg-[#1F1F2B]/50 hover:bg-[#1F1F2B] rounded-full text-[#EAEAF0] active:scale-95 transition-all"
-              >
-                <Menu size={20} />
-              </button>
-              <span className="text-lg font-extrabold tracking-tight text-[#EAEAF0] hidden sm:block ml-1">SplitIt</span>
+          ) : (
+            <div
+              onClick={() => setIsSettingsSheetOpen(true)}
+              className="w-8 h-8 bg-gradient-to-br from-[#1F1F2B] to-[#15151F] border border-white/[0.08] rounded-full flex items-center justify-center cursor-pointer active:scale-95 transition-all hover:border-white/20 shadow-lg group relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-tr from-[#A78BFA]/10 to-transparent opacity-50" />
+              <span className="text-[10px] font-black text-[#A78BFA]">
+                {userProfile?.name?.charAt(0).toUpperCase() || <User size={12} />}
+              </span>
             </div>
-
-            <div className="flex items-center gap-3 shrink-0">
-              <button
-                onClick={() => setIsSearchExpanded(true)}
-                className="w-10 h-10 flex items-center justify-center rounded-full text-[#EAEAF0] active:scale-95 transition-all bg-[#1F1F2B]/50 hover:bg-[#1F1F2B]"
-              >
-                <Search size={18} />
-              </button>
-
-
-              <div
-                onClick={() => navigate('/profile')}
-                className="w-10 h-10 bg-gradient-to-tr from-[#A78BFA] to-[#C4B5FD] rounded-full flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
-              >
-                <User size={18} className="text-black" />
-              </div>
-            </div>
-          </>
-        )}
-      </nav>
-
-      {/* Slide-in Hamburger Drawer Overlay */}
-      {isDrawerOpen && (
-        <div className="fixed inset-0 z-[100] flex lg:hidden">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/80 backdrop-blur-md animate-in fade-in duration-300"
-            onClick={() => setIsDrawerOpen(false)}
-          />
-          {/* Drawer Content */}
-          <div
-            className="relative w-[85%] max-w-xs h-full bg-[#09090B] border-r border-[#1F1F2B] shadow-2xl flex flex-col animate-in slide-in-from-left duration-300"
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
-          >
-            {/* Header: User Profile */}
-            <div className="p-6 border-b border-[#1F1F2B] relative">
-              <button
-                onClick={() => setIsDrawerOpen(false)}
-                className="absolute top-6 right-4 w-9 h-9 flex items-center justify-center bg-[#1F1F2B]/50 hover:bg-[#1F1F2B] rounded-full text-[#A1A1AA] active:scale-95 transition-all"
-              >
-                <X size={18} />
-              </button>
-
-              <div className="flex flex-col gap-4">
-                <div className="w-14 h-14 bg-gradient-to-tr from-[#A78BFA] to-[#C4B5FD] rounded-2xl flex items-center justify-center font-bold text-2xl text-black shadow-[0_8px_20px_rgba(167,139,250,0.3)]">
-                  {userProfile?.name?.charAt(0).toUpperCase() || 'S'}
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-[#EAEAF0] tracking-tight">{userProfile?.name || 'Guest User'}</h2>
-                  <p className="text-xs text-[#A1A1AA] font-medium truncate">{userProfile?.email || 'Sign in to manage groups'}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4 space-y-8 no-scrollbar pb-24">
-              <div className="space-y-1">
-                <p className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest ml-3 mb-2 opacity-50">Main</p>
-                <DrawerLink icon={Home} label="Dashboard" path="/dashboard" />
-                <DrawerLink icon={Users} label="Groups" path="/groups" />
-                <DrawerLink icon={UserPlus} label="Friends" path="/friends" />
-                <DrawerLink icon={Activity} label="Activity" path="/activity" />
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest ml-3 mb-2 opacity-50">Account</p>
-                <DrawerLink icon={Settings} label="Settings" path="/settings" />
-                <DrawerLink icon={CreditCard} label="Payments" />
-                <DrawerLink icon={Sliders} label="Preferences" />
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest ml-3 mb-2 opacity-50">Support</p>
-                <DrawerLink icon={HelpCircle} label="Help & Support" />
-                <DrawerLink icon={UserPlus} label="Invite Friends" />
-              </div>
-            </div>
-
-            {/* Logout Footer */}
-            <div className="p-4 border-t border-[#1F1F2B]">
-              <DrawerLink icon={LogOut} label="Log Out" onClick={handleLogout} danger />
-            </div>
-          </div>
+          )}
         </div>
-      )}
+      </nav>
 
       {/* Full Screen Search Overlay */}
       {isSearchExpanded && (
@@ -475,6 +326,155 @@ const MobileTopNavbar = () => {
                 )}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Settings Bottom Sheet */}
+      {isSettingsSheetOpen && (
+        <div className="fixed inset-0 z-[120] flex items-end lg:hidden">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300"
+            onClick={() => setIsSettingsSheetOpen(false)}
+          />
+          {/* Sheet */}
+          <div className="relative w-full bg-[#09090B] border-t border-white/10 rounded-t-[32px] shadow-[0_-10px_40px_rgba(0,0,0,0.5)] flex flex-col animate-in slide-in-from-bottom duration-400 ease-out">
+            {/* Handle */}
+            <div className="w-full flex justify-center pt-3 pb-1">
+              <div className="w-12 h-1.5 bg-white/10 rounded-full" />
+            </div>
+
+            {/* Content */}
+            <div className="p-6 pt-2">
+              {/* Profile Header */}
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-14 h-14 bg-gradient-to-br from-[#1F1F2B] to-[#15151F] border border-white/[0.08] rounded-2xl flex items-center justify-center font-bold text-2xl text-[#A78BFA] relative overflow-hidden shadow-2xl">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-[#A78BFA]/10 to-transparent opacity-50" />
+                  {userProfile?.name?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                <div className="flex-1 overflow-hidden">
+                  <h2 className="text-lg font-bold text-white tracking-tight truncate">{userProfile?.name || 'Guest User'}</h2>
+                  <p className="text-xs text-white/40 font-medium truncate mb-1">{userProfile?.email || 'premium@splitit.com'}</p>
+                  <span className="px-1.5 py-0.5 rounded-md bg-[#A78BFA]/10 text-[#A78BFA] text-[9px] font-bold uppercase tracking-wider">Premium Member</span>
+                </div>
+                <button
+                  onClick={() => setIsSettingsSheetOpen(false)}
+                  className="w-10 h-10 flex items-center justify-center bg-white/[0.03] border border-white/[0.05] rounded-full text-white/20 active:scale-90 transition-all hover:text-white"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Action List */}
+              <div className="space-y-1.5">
+              {/* Action List */}
+              <div className="space-y-2">
+                <button
+                  onClick={() => { setIsSettingsSheetOpen(false); navigate('/profile'); }}
+                  className="w-full flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/[0.03] active:scale-[0.98] transition-all group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/[0.03] text-[#A1A1AA] group-active:text-[#A78BFA] transition-colors">
+                      <User size={18} />
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <span className="text-sm font-semibold text-white/90">My Profile</span>
+                      <span className="text-[10px] font-medium text-white/30 tracking-tight">Manage your account details</span>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} className="text-white/20 group-hover:text-white/40" />
+                </button>
+
+                <div className="w-full flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/[0.03] transition-all group">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/[0.03] text-[#A1A1AA] group-active:text-[#A78BFA] transition-colors">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <span className="text-sm font-semibold text-white/90">Dark Mode</span>
+                      <span className="text-[10px] font-medium text-white/30 tracking-tight">Customize your appearance</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsDarkMode(!isDarkMode)}
+                    className={`relative w-11 h-6 rounded-full transition-all duration-400 ease-out flex items-center px-1 outline-none ${isDarkMode 
+                      ? 'bg-[#A78BFA] shadow-[0_0_20px_rgba(167,139,250,0.3)]' 
+                      : 'bg-[#1F1F2B] border border-white/5'
+                    }`}
+                  >
+                    <div 
+                      className={`w-4 h-4 bg-white rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.5)] transform transition-transform duration-400 ease-out ${isDarkMode ? 'translate-x-5' : 'translate-x-0'}`} 
+                    />
+                  </button>
+                </div>
+
+                <div className="w-full flex flex-col rounded-2xl bg-white/[0.02] border border-white/[0.03] overflow-hidden transition-all">
+                  <button
+                    onClick={() => setIsCurrencySelectorOpen(!isCurrencySelectorOpen)}
+                    className="w-full flex items-center justify-between p-4 active:scale-[0.98] transition-all group"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/[0.03] text-[#A1A1AA] group-active:text-[#A78BFA] transition-colors">
+                        <span className="font-bold text-sm">{currency.symbol}</span>
+                      </div>
+                      <div className="flex flex-col text-left">
+                        <span className="text-sm font-semibold text-white/90">Currency</span>
+                        <span className="text-[10px] font-medium text-white/30 tracking-tight">Set your preferred currency</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.05] text-[11px] font-bold text-white/70">
+                      {currency.code}
+                      <ChevronRight size={12} className={`opacity-30 transition-transform duration-300 ${isCurrencySelectorOpen ? 'rotate-90' : ''}`} />
+                    </div>
+                  </button>
+
+                  {isCurrencySelectorOpen && (
+                    <div className="px-4 pb-4 space-y-2 animate-in slide-in-from-top-2 duration-200">
+                      {CURRENCIES.map((curr) => (
+                        <button
+                          key={curr.code}
+                          onClick={() => {
+                            setCurrency(curr);
+                            setIsCurrencySelectorOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${currency.code === curr.code
+                              ? 'bg-[#A78BFA]/10 border border-[#A78BFA]/20 text-[#A78BFA]'
+                              : 'bg-white/[0.01] border border-white/[0.03] text-white/50'
+                            }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="w-6 text-center font-bold">{curr.symbol}</span>
+                            <span className="text-xs font-semibold">{curr.name}</span>
+                          </div>
+                          {currency.code === curr.code && <div className="w-2 h-2 rounded-full bg-[#A78BFA] shadow-[0_0_8px_#A78BFA]" />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center justify-between p-4 rounded-2xl bg-rose-500/5 border border-rose-500/10 transition-all group active:scale-[0.98]"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-rose-500/10 text-rose-500 group-active:bg-rose-500/20 transition-colors">
+                      <LogOut size={18} />
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <span className="text-sm font-bold text-rose-500">Sign Out</span>
+                      <span className="text-[10px] font-medium text-rose-500/40 tracking-tight">Securely log out of your session</span>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} className="text-rose-500/20 group-hover:text-rose-500/40" />
+                </button>
+              </div>
+              </div>
+
+              {/* Safe Area Spacer */}
+              <div className="h-8" />
+            </div>
           </div>
         </div>
       )}

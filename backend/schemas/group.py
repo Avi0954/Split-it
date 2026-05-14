@@ -12,6 +12,7 @@ class UserBasic(BaseModel):
 class GroupCreate(BaseModel):
     name: str
     description: Optional[str] = None
+    currency: Optional[str] = "INR"
 
 class AddMember(BaseModel):
     user_id: int
@@ -23,6 +24,7 @@ class GroupResponse(BaseModel):
     created_at: datetime
     description: Optional[str] = None
     avatar: Optional[str] = None
+    currency: Optional[str] = "INR"
     members_count: int = 1
     user_balance: float = 0.0
     last_activity: Optional[str] = None
@@ -42,6 +44,7 @@ class GroupDetail(BaseModel):
     created_at: datetime
     description: Optional[str] = None
     avatar: Optional[str] = None
+    currency: Optional[str] = "INR"
     members: List[GroupMemberResponse]
 
     model_config = ConfigDict(from_attributes=True)

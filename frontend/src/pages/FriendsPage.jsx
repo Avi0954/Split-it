@@ -7,6 +7,7 @@ import api from '../services/api';
 import { useToast } from '../contexts/ToastContext';
 import { getCurrentUser } from '../services/auth';
 import { useSearch } from '../contexts/SearchContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 
 const FriendsPage = () => {
   const [friends, setFriends] = useState([]);
@@ -21,6 +22,7 @@ const FriendsPage = () => {
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const { showToast } = useToast();
+  const { formatAmount } = useCurrency();
 
   const fetchFriends = useCallback(async () => {
     setLoading(true);
@@ -187,12 +189,12 @@ const FriendsPage = () => {
                     {friend.balance > 0 ? (
                       <div>
                         <p className="text-[10px] text-[#A1A1AA] font-bold uppercase tracking-wider mb-0.5">Owes you</p>
-                        <p className="text-lg font-bold text-[#34D399] tracking-tight">₹{friend.balance.toFixed(2)}</p>
+                        <p className="text-lg font-bold text-[#34D399] tracking-tight">{formatAmount(friend.balance)}</p>
                       </div>
                     ) : friend.balance < 0 ? (
                       <div>
                         <p className="text-[10px] text-[#A1A1AA] font-bold uppercase tracking-wider mb-0.5">You owe</p>
-                        <p className="text-lg font-bold text-[#F87171] tracking-tight">₹{Math.abs(friend.balance).toFixed(2)}</p>
+                        <p className="text-lg font-bold text-[#F87171] tracking-tight">{formatAmount(Math.abs(friend.balance))}</p>
                       </div>
                     ) : (
                       <p className="text-sm font-semibold text-[#A1A1AA]">Settled up</p>
