@@ -65,12 +65,17 @@ app = FastAPI(
 )
 
 # ✅ FIXED CORS CONFIG
-origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:5174",   # React frontend
-    "http://127.0.0.1:5174",
-]
+# Load from environment variable for production (e.g., "https://my-app.vercel.app,https://my-app.com")
+env_origins = os.environ.get("ALLOWED_ORIGINS")
+if env_origins:
+    origins = [origin.strip() for origin in env_origins.split(",")]
+else:
+    origins = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:5174",   # React frontend
+        "http://127.0.0.1:5174",
+    ]
 
 app.add_middleware(
     CORSMiddleware,
