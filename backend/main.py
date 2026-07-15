@@ -45,6 +45,9 @@
 # app.include_router(settlements.router, tags=["Settlements"])
 # app.include_router(preferences.router, prefix="/preferences", tags=["Preferences"])
 # app.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
