@@ -2,10 +2,10 @@ import secrets
 import hashlib
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, BackgroundTasks
 from backend.models.user import User
 from backend.models.password_reset_token import PasswordResetToken
-from backend.services.email_service import send_password_reset_email
+from backend.services.email.email_service import email_service
 from backend.utils.security import hash_password
 
 TOKEN_EXPIRATION_MINUTES = 15
@@ -14,7 +14,7 @@ def _hash_token(token: str) -> str:
     """Hashes the token for secure storage using SHA256."""
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
-def request_password_reset(db: Session, email: str):
+def request_password_reset(db: Session, email: str, background_tasks: BackgroundTasks):
     """
     Initiates a password reset request.
     Always returns silently regardless of whether the user exists,
@@ -42,8 +42,8 @@ def request_password_reset(db: Session, email: str):
     db.add(reset_record)
     db.commit()
     
-    # Send email with the RAW token
-    send_password_reset_email(user.email, raw_token)
+    # Send email with the RAW token asynchronously
+    email_service.send_password_reset(background_tasks, user.email, raw_token)
 
 def reset_password(db: Session, raw_token: str, new_password: str):
     """

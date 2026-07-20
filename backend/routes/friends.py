@@ -9,11 +9,13 @@ from backend.models.user import User
 from backend.models.group import Group, GroupMember
 from backend.models.friendship import Friendship
 from backend.utils.dependencies import get_current_user
+from backend.services.email.email_service import email_service
+from fastapi import BackgroundTasks
 
 router = APIRouter()
 
 @router.post("/", response_model=FriendResponse, status_code=status.HTTP_201_CREATED)
-def add_friend(request: AddFriendRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def add_friend(request: AddFriendRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     if request.email == current_user.email:
         raise HTTPException(status_code=400, detail="Cannot add yourself as a friend")
 
@@ -58,6 +60,9 @@ def add_friend(request: AddFriendRequest, db: Session = Depends(get_db), current
     db.add(new_friendship)
     db.commit()
     db.refresh(new_friendship)
+
+    # Send friend invitation email asynchronously
+    email_service.send_friend_invitation(background_tasks, friend_user.email, current_user.name)
 
     return {
         "id": new_friendship.id,

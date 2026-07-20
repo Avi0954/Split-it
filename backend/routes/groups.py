@@ -7,6 +7,8 @@ from backend.schemas.group import GroupCreate, GroupResponse, GroupDetail, AddMe
 from backend.utils.dependencies import get_db, get_current_user
 from backend.models.user import User
 from backend.services.group_service import create_group, add_member, get_user_groups, get_group_details, remove_member, delete_group
+from backend.services.email.email_service import email_service
+from fastapi import BackgroundTasks
 
 router = APIRouter()
 
@@ -20,9 +22,33 @@ def create_new_group(
     return create_group(db, current_user.id, group_data)
 
 @router.post("/{group_id}/add-member", status_code=status.HTTP_201_CREATED)
-def add_new_member(group_id: int, member_data: AddMember, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def add_new_member(
+    group_id: int, 
+    member_data: AddMember, 
+    background_tasks: BackgroundTasks, 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
     """Adds a member to the specified group by user ID."""
-    return add_member(db, group_id, member_data.user_id)
+    result = add_member(db, group_id, member_data.user_id)
+    
+    # Send email invitation
+    # Fetch user email and group details
+    from backend.models.user import User
+    from backend.models.group import Group
+    invited_user = db.query(User).filter(User.id == member_data.user_id).first()
+    group = db.query(Group).filter(Group.id == group_id).first()
+    
+    if invited_user and group:
+        email_service.send_group_invitation(
+            background_tasks, 
+            invited_user.email, 
+            group.name, 
+            current_user.name, 
+            group.id
+        )
+        
+    return result
 
 @router.get("/", response_model=List[GroupResponse])
 def list_my_groups(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

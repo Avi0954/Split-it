@@ -6,13 +6,14 @@ from backend.utils.security import hash_password, verify_password, create_access
 from backend.utils.dependencies import get_db, get_current_user
 from backend.schemas.password_reset import ForgotPasswordRequest, ResetPasswordRequest
 from backend.services.password_reset_service import request_password_reset, reset_password, cleanup_expired_tokens
+from backend.services.email.email_service import email_service
 from backend.utils.rate_limit import rate_limit_forgot_password, check_email_rate_limit
-from fastapi import Request
+from fastapi import Request, BackgroundTasks
 
 router = APIRouter()
 
 @router.post("/signup", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-def signup(user_data: UserCreate, db: Session = Depends(get_db)):
+def signup(user_data: UserCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """Registers a new user and hashes their password."""
     print(f"DEBUG: signup called with: {user_data}")
     # Check if email is already registered
@@ -33,6 +34,10 @@ def signup(user_data: UserCreate, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+    
+    # Send welcome email asynchronously
+    email_service.send_welcome_email(background_tasks, new_user.email, new_user.name)
+    
     return new_user
 
 @router.post("/login")
@@ -62,6 +67,7 @@ def get_me(current_user: User = Depends(get_current_user)):
 def forgot_password(
     request_data: ForgotPasswordRequest, 
     request: Request,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
     """Initiates a password reset request."""
@@ -72,7 +78,7 @@ def forgot_password(
     # Run cleanup of old tokens periodically
     cleanup_expired_tokens(db)
     
-    request_password_reset(db, request_data.email)
+    request_password_reset(db, request_data.email, background_tasks)
     
     return {"message": "If an account exists for this email, a password reset link has been sent."}
 
