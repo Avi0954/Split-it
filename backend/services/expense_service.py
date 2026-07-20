@@ -6,6 +6,7 @@ from backend.models.group import Group, GroupMember
 from backend.models.user import User
 from backend.schemas.expense import ExpenseCreate, UserBalance
 from backend.utils.currency import convert_currency
+from backend.services.realtime_service import realtime_service
 
 def create_expense(db: Session, group_id: int, expense_data: ExpenseCreate):
     """
@@ -74,6 +75,15 @@ def create_expense(db: Session, group_id: int, expense_data: ExpenseCreate):
     
     db.commit()
     db.refresh(new_expense)
+    
+    # Broadcast event
+    expense_dict = {
+        "id": new_expense.id,
+        "amount": new_expense.amount,
+        "description": new_expense.description
+    }
+    realtime_service.broadcast_expense_created(db, group_id, expense_dict)
+    
     return new_expense
 
 def get_group_expenses(db: Session, group_id: int):
@@ -136,6 +146,10 @@ def delete_expense(db: Session, group_id: int, expense_id: int, user_id: int):
         
     db.delete(expense)
     db.commit()
+    
+    # Broadcast event
+    realtime_service.broadcast_expense_deleted(db, group_id, expense_id)
+    
     return {"message": "Expense deleted successfully"}
 
 def update_expense(db: Session, group_id: int, expense_id: int, expense_data: ExpenseCreate, user_id: int):
@@ -179,4 +193,13 @@ def update_expense(db: Session, group_id: int, expense_id: int, expense_data: Ex
         
     db.commit()
     db.refresh(expense)
+    
+    # Broadcast event
+    expense_dict = {
+        "id": expense.id,
+        "amount": expense.amount,
+        "description": expense.description
+    }
+    realtime_service.broadcast_expense_updated(db, group_id, expense_dict)
+    
     return expense

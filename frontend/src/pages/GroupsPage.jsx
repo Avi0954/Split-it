@@ -10,6 +10,7 @@ import { useToast } from '../contexts/ToastContext';
 import { getCurrentUser } from '../services/auth';
 import { useSearch } from '../contexts/SearchContext';
 import { useCurrency } from '../contexts/CurrencyContext';
+import { useAllRealtimeEvents } from '../hooks/useRealtimeEvents';
 
 const GroupsPage = () => {
   const [groups, setGroups] = useState([]);
@@ -55,6 +56,11 @@ const GroupsPage = () => {
     fetchPageData();
     window.addEventListener('EXPENSE_ADDED', fetchPageData);
     return () => window.removeEventListener('EXPENSE_ADDED', fetchPageData);
+  }, [fetchPageData]);
+
+  useAllRealtimeEvents((payload) => {
+    console.log('Realtime event received, refetching groups page:', payload.type);
+    fetchPageData();
   }, [fetchPageData]);
 
   useEffect(() => {

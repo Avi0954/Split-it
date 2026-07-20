@@ -10,6 +10,7 @@ import { getCurrentUser } from '../services/auth';
 import { useToast } from '../contexts/ToastContext';
 import { useSearch } from '../contexts/SearchContext';
 import { useCurrency } from '../contexts/CurrencyContext';
+import { useAllRealtimeEvents } from '../hooks/useRealtimeEvents';
 
 const Dashboard = () => {
   const [groups, setGroups] = useState([]);
@@ -48,6 +49,11 @@ const Dashboard = () => {
     fetchDashboardData();
     window.addEventListener('EXPENSE_ADDED', fetchDashboardData);
     return () => window.removeEventListener('EXPENSE_ADDED', fetchDashboardData);
+  }, [fetchDashboardData]);
+
+  useAllRealtimeEvents((payload) => {
+    console.log('Realtime event received, refetching dashboard:', payload.type);
+    fetchDashboardData();
   }, [fetchDashboardData]);
 
   const filteredGroups = (groups || []).filter(group =>

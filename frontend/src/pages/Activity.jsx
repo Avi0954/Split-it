@@ -4,6 +4,7 @@ import Layout from '../components/Layout';
 import api from '../services/api';
 import { useToast } from '../contexts/ToastContext';
 import { useCurrency } from '../contexts/CurrencyContext';
+import { useAllRealtimeEvents } from '../hooks/useRealtimeEvents';
 
 const timeAgo = (dateStr) => {
   const diffInSeconds = Math.floor((new Date() - new Date(dateStr)) / 1000);
@@ -37,6 +38,20 @@ const Activity = () => {
     };
     fetchActivity();
   }, [showToast]);
+
+  const fetchActivityOnly = useCallback(async () => {
+    try {
+      const res = await api.get('/users/me/activity');
+      setFeed(res.data);
+    } catch (err) {
+      console.error("Failed to fetch activity:", err);
+    }
+  }, []);
+
+  useAllRealtimeEvents((payload) => {
+    console.log('Realtime event received, refetching activity page:', payload.type);
+    fetchActivityOnly();
+  }, [fetchActivityOnly]);
 
   return (
     <Layout>

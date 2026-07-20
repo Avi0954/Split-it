@@ -8,6 +8,7 @@ import { useToast } from '../contexts/ToastContext';
 import { getCurrentUser } from '../services/auth';
 import { useSearch } from '../contexts/SearchContext';
 import { useCurrency } from '../contexts/CurrencyContext';
+import { useAllRealtimeEvents } from '../hooks/useRealtimeEvents';
 
 const FriendsPage = () => {
   const [friends, setFriends] = useState([]);
@@ -42,6 +43,11 @@ const FriendsPage = () => {
   }, [showToast]);
 
   useEffect(() => {
+    fetchFriends();
+  }, [fetchFriends]);
+
+  useAllRealtimeEvents((payload) => {
+    console.log('Realtime event received, refetching friends page:', payload.type);
     fetchFriends();
   }, [fetchFriends]);
 

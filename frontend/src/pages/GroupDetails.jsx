@@ -8,10 +8,10 @@ import SettleUpModal from '../components/SettleUpModal';
 import api from '../services/api';
 import { getCurrentUser } from '../services/auth';
 import { useToast } from '../contexts/ToastContext';
-import { useHeader } from '../contexts/HeaderContext';
 import { useCurrency } from '../contexts/CurrencyContext';
 import LocalReceiptThumbnail from '../components/LocalReceiptThumbnail';
 import { deleteReceiptByExpenseId } from '../services/receiptDb';
+import { useAllRealtimeEvents } from '../hooks/useRealtimeEvents';
 
 const GroupDetails = () => {
   const { id } = useParams();
@@ -60,6 +60,14 @@ const GroupDetails = () => {
       setActions([]);
     };
   }, [fetchData, setTitle, setActions]);
+
+  useAllRealtimeEvents((payload) => {
+    // Re-fetch data if the event affects this group
+    if (payload.group_id === parseInt(id)) {
+      console.log('Realtime event received, refetching group data:', payload.type);
+      fetchData();
+    }
+  }, [id, fetchData]);
 
   useEffect(() => {
     if (group) {

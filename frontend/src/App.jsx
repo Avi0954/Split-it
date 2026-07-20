@@ -20,6 +20,7 @@ import { ToastProvider } from './contexts/ToastContext';
 import { SearchProvider } from './contexts/SearchContext';
 import { HeaderProvider } from './contexts/HeaderContext';
 import { CurrencyProvider } from './contexts/CurrencyContext';
+import { WebSocketProvider } from './providers/WebSocketProvider';
 
 /**
  * Root Application Routing Component
@@ -37,102 +38,103 @@ function App() {
     <ToastProvider>
       <CurrencyProvider>
         <HeaderProvider>
-          <Router>
-            <SearchProvider>
-              <Routes>
-                {/* Public Routes - Accessible only when logged out */}
-                <Route
-                  path="/login"
-                  element={
-                    <PublicRoute>
-                      <Login />
-                    </PublicRoute>
-                  }
-                />
-                <Route
-                  path="/signup"
-                  element={
-                    <PublicRoute>
-                      <Signup />
-                    </PublicRoute>
-                  }
-                />
-                <Route
-                  path="/forgot-password"
-                  element={
-                    <PublicRoute>
-                      <ForgotPassword />
-                    </PublicRoute>
-                  }
-                />
-                <Route
-                  path="/reset-password"
-                  element={
-                    <PublicRoute>
-                      <ResetPassword />
-                    </PublicRoute>
-                  }
-                />
+          <WebSocketProvider>
+            <Router>
+              <SearchProvider>
+                <Routes>
+                  {/* Public Routes - Accessible only when logged out */}
+                  <Route
+                    path="/login"
+                    element={
+                      <PublicRoute>
+                        <Login />
+                      </PublicRoute>
+                    }
+                  />
+                  <Route
+                    path="/signup"
+                    element={
+                      <PublicRoute>
+                        <Signup />
+                      </PublicRoute>
+                    }
+                  />
+                  <Route
+                    path="/forgot-password"
+                    element={
+                      <PublicRoute>
+                        <ForgotPassword />
+                      </PublicRoute>
+                    }
+                  />
+                  <Route
+                    path="/reset-password"
+                    element={
+                      <PublicRoute>
+                        <ResetPassword />
+                      </PublicRoute>
+                    }
+                  />
 
-                {/* Protected Routes - Accessible only when logged in */}
-                <Route
-                  path="/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/groups"
-                  element={
-                    <ProtectedRoute>
-                      <GroupsPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/friends"
-                  element={
-                    <ProtectedRoute>
-                      <FriendsPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/groups/:id"
-                  element={
-                    <ProtectedRoute>
-                      <GroupDetails />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/profile"
-                  element={
-                    <ProtectedRoute>
-                      <Profile />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/activity"
-                  element={
-                    <ProtectedRoute>
-                      <Activity />
-                    </ProtectedRoute>
-                  }
-                />
+                  {/* Protected Routes - Accessible only when logged in */}
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/groups"
+                    element={
+                      <ProtectedRoute>
+                        <GroupsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/friends"
+                    element={
+                      <ProtectedRoute>
+                        <FriendsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/groups/:id"
+                    element={
+                      <ProtectedRoute>
+                        <GroupDetails />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProtectedRoute>
+                        <Profile />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/activity"
+                    element={
+                      <ProtectedRoute>
+                        <Activity />
+                      </ProtectedRoute>
+                    }
+                  />
 
+                  {/* Dynamic Root Redirect based on Auth */}
+                  <Route path="/" element={<RootRedirect />} />
 
-                {/* Dynamic Root Redirect based on Auth */}
-                <Route path="/" element={<RootRedirect />} />
-
-                {/* Catch-all route to handle 404s/unknown paths */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </SearchProvider>
-          </Router>
+                  {/* Catch-all route to handle 404s/unknown paths */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </SearchProvider>
+            </Router>
+          </WebSocketProvider>
         </HeaderProvider>
       </CurrencyProvider>
     </ToastProvider>

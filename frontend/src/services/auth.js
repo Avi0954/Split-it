@@ -49,6 +49,10 @@ export const getCurrentUser = async () => {
  */
 export const logout = (navigate) => {
   removeToken();
+  
+  // Dispatch event to allow generic cleanup like WebSocket disconnects
+  window.dispatchEvent(new CustomEvent('AUTH_ERROR'));
+  
   if (navigate) {
     navigate('/login');
   } else {

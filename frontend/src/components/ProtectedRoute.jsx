@@ -1,6 +1,7 @@
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { isAuthenticated } from '../services/auth';
+import { useWebSocket } from '../hooks/useWebSocket';
 
 /**
  * ProtectedRoute:
@@ -14,6 +15,24 @@ const ProtectedRoute = ({ children }) => {
 
   console.log(`[Navigation] PATH: ${location.pathname} | TOKEN: ${token ? 'PRESENT (starts with ' + token.substring(0, 10) + '...)' : 'MISSING'}`);
   console.log(`[Navigation] Access Decision: ${auth ? 'ALLOW ACCESS' : 'DENY & REDIRECT TO /login'}`);
+
+  const { connect, disconnect } = useWebSocket();
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (auth) {
+      connect();
+    }
+    
+    const handleAuthError = () => {
+      localStorage.removeItem('token');
+      disconnect();
+      navigate('/login');
+    };
+    
+    window.addEventListener('AUTH_ERROR', handleAuthError);
+    return () => window.removeEventListener('AUTH_ERROR', handleAuthError);
+  }, [auth, connect, disconnect, navigate]);
 
   if (!auth) {
     return <Navigate to="/login" state={{ from: location }} replace />;

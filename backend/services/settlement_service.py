@@ -7,6 +7,7 @@ from backend.models.group import GroupMember
 from backend.services.expense_service import calculate_group_balances
 from backend.schemas.settlement import SimplifiedSettlement, SettlementCreate
 from backend.utils.currency import convert_currency
+from backend.services.realtime_service import realtime_service
 
 def calculate_optimized_settlements(db: Session, group_id: int):
     """
@@ -97,4 +98,14 @@ def record_settlement(db: Session, settlement_data: SettlementCreate):
     db.add(new_settlement)
     db.commit()
     db.refresh(new_settlement)
+    
+    # Broadcast event
+    settlement_dict = {
+        "id": new_settlement.id,
+        "amount": new_settlement.amount,
+        "from_user_id": new_settlement.from_user_id,
+        "to_user_id": new_settlement.to_user_id
+    }
+    realtime_service.broadcast_settlement_created(db, settlement_data.group_id, settlement_dict)
+    
     return new_settlement

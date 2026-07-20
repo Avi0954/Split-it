@@ -53,7 +53,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
 from backend.database import engine, Base
-from backend.routes import auth, users, groups, expenses, settlements, preferences, dashboard, friends
+from backend.routes import auth, users, groups, expenses, settlements, preferences, dashboard, friends, websocket
 from backend.models import user, group, expense, settlement, user_preferences, friendship, password_reset_token
 
 
@@ -93,6 +93,7 @@ async def root():
 
 
 
+app.include_router(websocket.router, tags=["Websockets"])
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
 app.include_router(groups.router, prefix="/api/groups", tags=["Groups"])
