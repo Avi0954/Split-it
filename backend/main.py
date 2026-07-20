@@ -54,10 +54,9 @@ from fastapi.staticfiles import StaticFiles
 import os
 from backend.database import engine, Base
 from backend.routes import auth, users, groups, expenses, settlements, preferences, dashboard, friends
-from backend.models import user, group, expense, settlement, user_preferences, friendship
+from backend.models import user, group, expense, settlement, user_preferences, friendship, password_reset_token
 
-UPLOAD_DIR = os.path.join("backend", "uploads")
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 
 Base.metadata.create_all(bind=engine)
 
@@ -92,13 +91,13 @@ app.add_middleware(
 async def root():
     return {"message": "SplitIt API Running 🚀"}
 
-app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
-app.include_router(auth.router, prefix="/auth", tags=["Auth"])
-app.include_router(users.router, prefix="/users", tags=["Users"])
-app.include_router(groups.router, prefix="/groups", tags=["Groups"])
-app.include_router(expenses.router, prefix="/groups", tags=["Expenses"])
-app.include_router(settlements.router, tags=["Settlements"])
-app.include_router(preferences.router, prefix="/preferences", tags=["Preferences"])
-app.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
-app.include_router(friends.router, prefix="/friends", tags=["Friends"])
+
+app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
+app.include_router(users.router, prefix="/api/users", tags=["Users"])
+app.include_router(groups.router, prefix="/api/groups", tags=["Groups"])
+app.include_router(expenses.router, prefix="/api/groups", tags=["Expenses"])
+app.include_router(settlements.router, prefix="/api", tags=["Settlements"])
+app.include_router(preferences.router, prefix="/api/preferences", tags=["Preferences"])
+app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
+app.include_router(friends.router, prefix="/api/friends", tags=["Friends"])

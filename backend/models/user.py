@@ -20,3 +20,6 @@ class User(Base):
     # 1-to-1 User Settings
     preferences = relationship("UserPreferences", back_populates="user", uselist=False)
 
+    # Password reset tokens
+    password_reset_tokens = relationship("PasswordResetToken", back_populates="user", cascade="all, delete-orphan")
+

@@ -10,6 +10,8 @@ import { getCurrentUser } from '../services/auth';
 import { useToast } from '../contexts/ToastContext';
 import { useHeader } from '../contexts/HeaderContext';
 import { useCurrency } from '../contexts/CurrencyContext';
+import LocalReceiptThumbnail from '../components/LocalReceiptThumbnail';
+import { deleteReceiptByExpenseId } from '../services/receiptDb';
 
 const GroupDetails = () => {
   const { id } = useParams();
@@ -83,6 +85,7 @@ const GroupDetails = () => {
     if (window.confirm("Are you sure you want to delete this expense? This will recalculate all balances.")) {
       try {
         await api.delete(`/groups/${id}/expenses/${expenseId}`);
+        await deleteReceiptByExpenseId(expenseId);
         showToast('Expense deleted successfully', 'success');
         fetchData();
       } catch (err) {
@@ -317,22 +320,26 @@ const GroupDetails = () => {
                           </p>
                         )}
 
-                        {(exp.payer_id === currentUser?.id || group?.created_by === currentUser?.id) && (
-                          <div className="flex items-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0 duration-200">
-                            <button
-                              onClick={(e) => handleEditExpense(e, exp)}
-                              className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#1F1F2B] text-purple-400 hover:bg-purple-500/20 transition-colors"
-                            >
-                              <Pencil size={14} />
-                            </button>
-                            <button
-                              onClick={(e) => handleDeleteExpense(e, exp.id)}
-                              className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#1F1F2B] text-red-500 hover:bg-red-500/20 transition-colors"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0 duration-200">
+                          <LocalReceiptThumbnail expenseId={exp.id} />
+                          
+                          {(exp.payer_id === currentUser?.id || group?.created_by === currentUser?.id) && (
+                            <>
+                              <button
+                                onClick={(e) => handleEditExpense(e, exp)}
+                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#1F1F2B] text-purple-400 hover:bg-purple-500/20 transition-colors"
+                              >
+                                <Pencil size={14} />
+                              </button>
+                              <button
+                                onClick={(e) => handleDeleteExpense(e, exp.id)}
+                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#1F1F2B] text-red-500 hover:bg-red-500/20 transition-colors"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>

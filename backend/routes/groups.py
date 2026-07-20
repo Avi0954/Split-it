@@ -1,7 +1,7 @@
 import os
 import uuid
 from typing import List, Optional, Annotated
-from fastapi import APIRouter, Depends, status, File, UploadFile, Form
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from backend.schemas.group import GroupCreate, GroupResponse, GroupDetail, AddMember
 from backend.utils.dependencies import get_db, get_current_user
@@ -11,40 +11,13 @@ from backend.services.group_service import create_group, add_member, get_user_gr
 router = APIRouter()
 
 @router.post("/", response_model=GroupResponse, status_code=status.HTTP_201_CREATED)
-async def create_new_group(
-    name: Annotated[str, Form(...)],
-    description: Annotated[Optional[str], Form()] = None,
-    currency: Annotated[Optional[str], Form()] = "INR",
-    avatar_file: Annotated[Optional[UploadFile], File()] = None,
+def create_new_group(
+    group_data: GroupCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Creates a new group with an optional avatar and the current user as creator."""
-    avatar_url = None
-    
-    if avatar_file:
-        # Generate unique filename
-        try:
-            ext = os.path.splitext(avatar_file.filename)[1]
-            filename = f"{uuid.uuid4()}{ext}"
-            upload_path = os.path.join("backend", "uploads", "groups", filename)
-            
-            # Ensure directory exists
-            os.makedirs(os.path.dirname(upload_path), exist_ok=True)
-            
-            # Save file locally
-            content = await avatar_file.read()
-            with open(upload_path, "wb") as buffer:
-                buffer.write(content)
-            
-            # URL path for frontend access
-            avatar_url = f"/uploads/groups/{filename}"
-        except Exception as e:
-            print(f"Error saving avatar: {e}")
-            # Continue without avatar if it fails
-        
-    group_data = GroupCreate(name=name, description=description, currency=currency)
-    return create_group(db, current_user.id, group_data, avatar=avatar_url)
+    """Creates a new group with an icon and the current user as creator."""
+    return create_group(db, current_user.id, group_data)
 
 @router.post("/{group_id}/add-member", status_code=status.HTTP_201_CREATED)
 def add_new_member(group_id: int, member_data: AddMember, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -97,7 +70,8 @@ def list_my_groups(db: Session = Depends(get_db), current_user: User = Depends(g
             "created_by": g.created_by,
             "created_at": g.created_at,
             "description": g.description,
-            "avatar": g.avatar,
+            "icon_name": g.icon_name,
+            "icon_color": g.icon_color,
             "members_count": members_count,
             "user_balance": balance,
             "last_activity": last_activity

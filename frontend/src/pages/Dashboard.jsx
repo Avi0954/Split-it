@@ -4,6 +4,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import Layout from '../components/Layout';
 import CreateGroupModal from '../components/CreateGroupModal';
 import api from '../services/api';
+import GroupAvatar from '../components/groups/GroupAvatar';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '../services/auth';
 import { useToast } from '../contexts/ToastContext';
@@ -214,11 +215,12 @@ const Dashboard = () => {
                           <div className="flex items-center gap-3.5">
                             <div className="w-11 h-11 bg-[#09090B] rounded-xl flex items-center justify-center text-[#A78BFA] border border-[#1F1F2B] overflow-hidden group-hover:scale-110 group-hover:border-[#A78BFA]/30 transition-all duration-500 relative shadow-xl">
                               <div className="absolute inset-0 bg-gradient-to-br from-[#A78BFA]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                              {group.avatar ? (
-                                <img src={`http://localhost:8000${group.avatar}`} alt={group.name} className="w-full h-full object-cover" />
-                              ) : (
-                                <Users size={20} strokeWidth={2} />
-                              )}
+                              <GroupAvatar 
+                                iconName={group.icon_name} 
+                                iconColor={group.icon_color} 
+                                className="w-full h-full" 
+                                size={20} 
+                              />
                             </div>
                             <div className="min-w-0">
                               <h4 className="font-bold text-[#EAEAF0] text-sm leading-tight group-hover:text-[#A78BFA] transition-colors truncate pr-2">{group.name}</h4>

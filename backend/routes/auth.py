@@ -4,6 +4,10 @@ from backend.models.user import User
 from backend.schemas.user import UserCreate, UserLogin, UserResponse
 from backend.utils.security import hash_password, verify_password, create_access_token
 from backend.utils.dependencies import get_db, get_current_user
+from backend.schemas.password_reset import ForgotPasswordRequest, ResetPasswordRequest
+from backend.services.password_reset_service import request_password_reset, reset_password, cleanup_expired_tokens
+from backend.utils.rate_limit import rate_limit_forgot_password, check_email_rate_limit
+from fastapi import Request
 
 router = APIRouter()
 
@@ -53,3 +57,32 @@ def login(login_data: UserLogin, db: Session = Depends(get_db)):
 def get_me(current_user: User = Depends(get_current_user)):
     """Retrieves the current authenticated user's profile."""
     return current_user
+
+@router.post("/forgot-password")
+def forgot_password(
+    request_data: ForgotPasswordRequest, 
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Initiates a password reset request."""
+    # Run rate limit checks
+    rate_limit_forgot_password(request)
+    check_email_rate_limit(request_data.email)
+    
+    # Run cleanup of old tokens periodically
+    cleanup_expired_tokens(db)
+    
+    request_password_reset(db, request_data.email)
+    
+    return {"message": "If an account exists for this email, a password reset link has been sent."}
+
+@router.post("/reset-password")
+def reset_password_endpoint(
+    request_data: ResetPasswordRequest, 
+    db: Session = Depends(get_db)
+):
+    """Resets the user password using a valid token."""
+    # We call the service function to validate and save
+    reset_password(db, request_data.token, request_data.new_password)
+    
+    return {"message": "Password reset successfully."}

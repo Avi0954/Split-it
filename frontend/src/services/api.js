@@ -1,7 +1,10 @@
 import axios from 'axios';
 
+// Use VITE_API_URL if provided, else in DEV use localhost/api, in PROD use /api
+const defaultBaseUrl = import.meta.env.DEV ? 'http://localhost:8000/api' : '/api';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+  baseURL: import.meta.env.VITE_API_URL || defaultBaseUrl,
 });
 
 /**
@@ -49,5 +52,16 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export const getMediaUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  
+  const base = import.meta.env.VITE_API_URL 
+    ? import.meta.env.VITE_API_URL.replace(/\/api$/, '')
+    : (import.meta.env.DEV ? 'http://localhost:8000' : '');
+    
+  return `${base}${path}`;
+};
 
 export default api;

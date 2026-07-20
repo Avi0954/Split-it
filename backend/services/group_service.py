@@ -7,12 +7,13 @@ from backend.models.settlement import Settlement
 from backend.schemas.group import GroupCreate
 from backend.services.expense_service import calculate_group_balances
 
-def create_group(db: Session, user_id: int, group_data: GroupCreate, avatar: str = None):
+def create_group(db: Session, user_id: int, group_data: GroupCreate):
     """Creates a new group and automatically adds the creator as a member."""
     new_group = Group(
         name=group_data.name,
         description=group_data.description,
-        avatar=avatar,
+        icon_name=group_data.icon_name,
+        icon_color=group_data.icon_color,
         currency=group_data.currency,
         created_by=user_id
     )

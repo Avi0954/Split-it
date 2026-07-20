@@ -6,6 +6,8 @@ import SplashScreen from './components/SplashScreen';
 // Page Imports
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import GroupDetails from './pages/GroupDetails';
 import GroupsPage from './pages/GroupsPage';
@@ -52,6 +54,22 @@ function App() {
                   element={
                     <PublicRoute>
                       <Signup />
+                    </PublicRoute>
+                  }
+                />
+                <Route
+                  path="/forgot-password"
+                  element={
+                    <PublicRoute>
+                      <ForgotPassword />
+                    </PublicRoute>
+                  }
+                />
+                <Route
+                  path="/reset-password"
+                  element={
+                    <PublicRoute>
+                      <ResetPassword />
                     </PublicRoute>
                   }
                 />

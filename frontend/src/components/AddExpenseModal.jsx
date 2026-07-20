@@ -4,6 +4,7 @@ import api from '../services/api';
 import { getCurrentUser } from '../services/auth';
 import { useToast } from '../contexts/ToastContext';
 import { useCurrency } from '../contexts/CurrencyContext';
+import { saveReceipt, getReceiptByExpenseId, deleteReceiptByExpenseId } from '../services/receiptDb';
 
 const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMembers = [], onExpenseAdded = () => { }, editExpense = null }) => {
   const [description, setDescription] = useState('');
@@ -71,6 +72,18 @@ const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMember
       }, 300);
     }
   }, [isOpen, initialGroupId, initialMembers, editExpense]);
+
+  // Load existing receipt if editing
+  useEffect(() => {
+    if (isOpen && editExpense) {
+      getReceiptByExpenseId(editExpense.id).then(receipt => {
+        if (receipt && receipt.imageBlob) {
+          const file = new File([receipt.imageBlob], receipt.fileName, { type: receipt.mimeType });
+          setReceiptFile(file);
+        }
+      }).catch(err => console.error("Error loading local receipt:", err));
+    }
+  }, [isOpen, editExpense]);
 
   const fetchGroupMembers = async (groupId) => {
     try {
@@ -219,9 +232,18 @@ const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMember
 
       if (editExpense) {
         await api.put(`/groups/${selectedGroupId}/expenses/${editExpense.id}`, payload);
+        if (receiptFile) {
+          await saveReceipt(editExpense.id, receiptFile);
+        } else {
+          // If they removed the receipt
+          await deleteReceiptByExpenseId(editExpense.id);
+        }
         showToast('Expense updated successfully! 🎉');
       } else {
-        await api.post(`/groups/${selectedGroupId}/expenses`, payload);
+        const res = await api.post(`/groups/${selectedGroupId}/expenses`, payload);
+        if (receiptFile && res.data && res.data.id) {
+          await saveReceipt(res.data.id, receiptFile);
+        }
         showToast('Expense created successfully! 🎉');
       }
 
@@ -561,17 +583,24 @@ const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMember
                     type="file"
                     id="receipt-upload"
                     className="hidden"
-                    accept="image/png, image/jpeg, application/pdf"
+                    accept="image/png, image/jpeg, image/jpg, image/webp"
                     onChange={(e) => {
                       if (e.target.files && e.target.files[0]) {
-                        setReceiptFile(e.target.files[0]);
+                        const file = e.target.files[0];
+                        if (file.size > 10 * 1024 * 1024) {
+                          return showToast('Receipt image must be less than 10MB', 'error');
+                        }
+                        if (!['image/png', 'image/jpeg', 'image/jpg', 'image/webp'].includes(file.type)) {
+                          return showToast('Invalid format. Use JPG, PNG, or WEBP', 'error');
+                        }
+                        setReceiptFile(file);
                       }
                     }}
                   />
                   {receiptFile ? (
                     <div className="animate-in zoom-in-95 duration-300">
                       <div className="w-12 h-12 rounded-2xl bg-[#A78BFA]/20 flex items-center justify-center text-[#A78BFA] mx-auto mb-4">
-                        {receiptFile.type.includes('pdf') ? <FileText size={24} /> : <ImageIcon size={24} />}
+                        <ImageIcon size={24} />
                       </div>
                       <p className="text-xs font-bold text-[#EAEAF0] truncate max-w-[180px] mb-1">{receiptFile.name}</p>
                       <p className="text-[10px] text-[#A1A1AA] font-bold">{(receiptFile.size / 1024 / 1024).toFixed(2)} MB</p>
@@ -591,8 +620,8 @@ const AddExpenseModal = ({ isOpen, onClose, initialGroupId = null, initialMember
                       <div className="w-12 h-12 rounded-2xl bg-[#1F1F2B] flex items-center justify-center text-[#A1A1AA] mb-4 group-hover:text-[#A78BFA] transition-all group-hover:scale-110">
                         <UploadCloud size={24} />
                       </div>
-                      <p className="text-xs font-bold text-[#EAEAF0] mb-1">Click to upload receipt</p>
-                      <p className="text-[10px] text-[#A1A1AA] font-bold opacity-60 uppercase tracking-tighter">JPG, PNG, or PDF</p>
+                      <p className="text-xs font-bold text-[#EAEAF0] mb-1">Click to attach receipt</p>
+                      <p className="text-[10px] text-[#A1A1AA] font-bold opacity-60 uppercase tracking-tighter">JPG, PNG, WEBP (Max 10MB)</p>
                     </>
                   )}
                 </div>

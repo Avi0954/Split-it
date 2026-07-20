@@ -4,6 +4,7 @@ import Layout from '../components/Layout';
 import CreateGroupModal from '../components/CreateGroupModal';
 import SettleUpModal from '../components/SettleUpModal';
 import api from '../services/api';
+import GroupAvatar from '../components/groups/GroupAvatar';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
 import { getCurrentUser } from '../services/auth';
@@ -162,11 +163,12 @@ const GroupsPage = () => {
                             <div className={`w-12 h-12 bg-[#09090B] border border-[#1F1F2B] rounded-2xl flex items-center justify-center text-[#A78BFA] shadow-2xl group-hover:scale-105 transition-all duration-500 overflow-hidden relative ${isSettled ? 'xl:group-hover:border-[#1F1F2B]' : 'group-hover:border-[#A78BFA]/40'
                               }`}>
                               <div className="absolute inset-0 bg-gradient-to-br from-[#A78BFA]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                              {group.avatar ? (
-                                <img src={`http://localhost:8000${group.avatar}`} alt={group.name} className="w-full h-full object-cover" />
-                              ) : (
-                                <Users size={22} strokeWidth={2.5} />
-                              )}
+                              <GroupAvatar 
+                                iconName={group.icon_name} 
+                                iconColor={group.icon_color} 
+                                className="w-full h-full" 
+                                size={22} 
+                              />
                             </div>
                             <div className="min-w-0">
                               <h4 className={`text-lg font-bold text-white tracking-tight leading-tight truncate pr-4 transition-colors duration-300 ${isSettled ? 'xl:group-hover:text-[#EAEAF0]' : 'group-hover:text-[#A78BFA]'

@@ -1,31 +1,20 @@
-import React, { useState, useRef } from 'react';
-import { X, Users, MessageSquare, Loader2, ImagePlus, User } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Users, MessageSquare, Loader2 } from 'lucide-react';
 import api from '../services/api';
 import { useToast } from '../contexts/ToastContext';
+import GroupIconPicker, { ICON_OPTIONS, COLOR_OPTIONS } from './groups/GroupIconPicker';
 
 const CreateGroupModal = ({ isOpen, onClose, onGroupCreated }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [avatarFile, setAvatarFile] = useState(null);
-  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [iconName, setIconName] = useState('Users');
+  const [iconColor, setIconColor] = useState('#3B82F6');
   const [isLoading, setIsLoading] = useState(false);
-  const fileInputRef = useRef(null);
   const { showToast } = useToast();
 
   if (!isOpen) return null;
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        return showToast('Image size should be less than 5MB', 'error');
-      }
-      setAvatarFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setAvatarPreview(reader.result);
-      reader.readAsDataURL(file);
-    }
-  };
+  if (!isOpen) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,17 +22,16 @@ const CreateGroupModal = ({ isOpen, onClose, onGroupCreated }) => {
     if (!name) return showToast('Group name is required', 'error');
 
     setIsLoading(true);
-    const formData = new FormData();
-    formData.append('name', name);
-    formData.append('description', description);
-    if (avatarFile) {
-      formData.append('avatar_file', avatarFile);
-    }
+    const payload = {
+      name,
+      description,
+      icon_name: iconName,
+      icon_color: iconColor,
+      currency: "INR"
+    };
 
     try {
-      await api.post('/groups/', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      await api.post('/groups/', payload);
       showToast('Group created successfully!');
       onGroupCreated();
       onClose();
@@ -51,8 +39,8 @@ const CreateGroupModal = ({ isOpen, onClose, onGroupCreated }) => {
       setTimeout(() => {
         setName('');
         setDescription('');
-        setAvatarFile(null);
-        setAvatarPreview(null);
+        setIconName('Users');
+        setIconColor('#3B82F6');
       }, 200);
     } catch (err) {
       console.error('[API Error] Group creation failed:', err.response?.data || err.message);
@@ -78,32 +66,14 @@ const CreateGroupModal = ({ isOpen, onClose, onGroupCreated }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-5">
-          {/* Avatar Upload Section */}
-          <div className="flex flex-col items-center justify-center pt-2 pb-4">
-            <div
-              onClick={() => fileInputRef.current.click()}
-              className="relative w-24 h-24 bg-[#09090B] border-2 border-dashed border-[#1F1F2B] hover:border-[#A78BFA] rounded-full flex items-center justify-center cursor-pointer overflow-hidden transition-all group"
-            >
-              {avatarPreview ? (
-                <img src={avatarPreview} alt="Avatar preview" className="w-full h-full object-cover" />
-              ) : (
-                <div className="flex flex-col items-center text-[#A1A1AA] group-hover:text-[#A78BFA]">
-                  <ImagePlus size={24} strokeWidth={1.5} />
-                  <span className="text-[10px] font-bold mt-1 uppercase tracking-widest">Photo</span>
-                </div>
-              )}
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <ImagePlus size={20} className="text-[#EAEAF0]" />
-              </div>
-            </div>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept="image/*"
-              className="hidden"
+          {/* Icon Picker Section */}
+          <div className="pt-2 pb-4 border-b border-[#1F1F2B]">
+            <GroupIconPicker
+              selectedIcon={iconName}
+              selectedColor={iconColor}
+              onIconSelect={setIconName}
+              onColorSelect={setIconColor}
             />
-            <p className="text-[11px] text-[#A1A1AA] mt-3 font-medium uppercase tracking-wider">Group Identity</p>
           </div>
 
           <div className="space-y-1.5">

@@ -8,6 +8,7 @@ import {
 import { useSearch } from '../contexts/SearchContext';
 import { logout, getCurrentUser } from '../services/auth';
 import api from '../services/api';
+import GroupAvatar from './groups/GroupAvatar';
 import { useHeader } from '../contexts/HeaderContext';
 import { MoreVertical } from 'lucide-react';
 import { useCurrency } from '../contexts/CurrencyContext';
@@ -280,9 +281,12 @@ const MobileTopNavbar = () => {
                             >
                               <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-[#09090B] border border-[#1F1F2B] flex items-center justify-center text-[#A78BFA]">
-                                  {group.avatar ? (
-                                    <img src={`http://localhost:8000${group.avatar}`} alt="" className="w-full h-full object-cover rounded-xl" />
-                                  ) : <Users size={18} />}
+                                  <GroupAvatar 
+                                    iconName={group.icon_name} 
+                                    iconColor={group.icon_color} 
+                                    className="w-full h-full" 
+                                    size={18} 
+                                  />
                                 </div>
                                 <div>
                                   <p className="text-sm font-semibold text-[#EAEAF0]">{group.name}</p>
@@ -368,108 +372,108 @@ const MobileTopNavbar = () => {
 
               {/* Action List */}
               <div className="space-y-1.5">
-              {/* Action List */}
-              <div className="space-y-2">
-                <button
-                  onClick={() => { setIsSettingsSheetOpen(false); navigate('/profile'); }}
-                  className="w-full flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/[0.03] active:scale-[0.98] transition-all group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/[0.03] text-[#A1A1AA] group-active:text-[#A78BFA] transition-colors">
-                      <User size={18} />
-                    </div>
-                    <div className="flex flex-col text-left">
-                      <span className="text-sm font-semibold text-white/90">My Profile</span>
-                      <span className="text-[10px] font-medium text-white/30 tracking-tight">Manage your account details</span>
-                    </div>
-                  </div>
-                  <ChevronRight size={16} className="text-white/20 group-hover:text-white/40" />
-                </button>
-
-                <div className="w-full flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/[0.03] transition-all group">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/[0.03] text-[#A1A1AA] group-active:text-[#A78BFA] transition-colors">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
-                    </div>
-                    <div className="flex flex-col text-left">
-                      <span className="text-sm font-semibold text-white/90">Dark Mode</span>
-                      <span className="text-[10px] font-medium text-white/30 tracking-tight">Customize your appearance</span>
-                    </div>
-                  </div>
+                {/* Action List */}
+                <div className="space-y-2">
                   <button
-                    onClick={() => setIsDarkMode(!isDarkMode)}
-                    className={`relative w-11 h-6 rounded-full transition-all duration-400 ease-out flex items-center px-1 outline-none ${isDarkMode 
-                      ? 'bg-[#A78BFA] shadow-[0_0_20px_rgba(167,139,250,0.3)]' 
-                      : 'bg-[#1F1F2B] border border-white/5'
-                    }`}
-                  >
-                    <div 
-                      className={`w-4 h-4 bg-white rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.5)] transform transition-transform duration-400 ease-out ${isDarkMode ? 'translate-x-5' : 'translate-x-0'}`} 
-                    />
-                  </button>
-                </div>
-
-                <div className="w-full flex flex-col rounded-2xl bg-white/[0.02] border border-white/[0.03] overflow-hidden transition-all">
-                  <button
-                    onClick={() => setIsCurrencySelectorOpen(!isCurrencySelectorOpen)}
-                    className="w-full flex items-center justify-between p-4 active:scale-[0.98] transition-all group"
+                    onClick={() => { setIsSettingsSheetOpen(false); navigate('/profile'); }}
+                    className="w-full flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/[0.03] active:scale-[0.98] transition-all group"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/[0.03] text-[#A1A1AA] group-active:text-[#A78BFA] transition-colors">
-                        <span className="font-bold text-sm">{currency.symbol}</span>
+                        <User size={18} />
                       </div>
                       <div className="flex flex-col text-left">
-                        <span className="text-sm font-semibold text-white/90">Currency</span>
-                        <span className="text-[10px] font-medium text-white/30 tracking-tight">Set your preferred currency</span>
+                        <span className="text-sm font-semibold text-white/90">My Profile</span>
+                        <span className="text-[10px] font-medium text-white/30 tracking-tight">Manage your account details</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.05] text-[11px] font-bold text-white/70">
-                      {currency.code}
-                      <ChevronRight size={12} className={`opacity-30 transition-transform duration-300 ${isCurrencySelectorOpen ? 'rotate-90' : ''}`} />
-                    </div>
+                    <ChevronRight size={16} className="text-white/20 group-hover:text-white/40" />
                   </button>
 
-                  {isCurrencySelectorOpen && (
-                    <div className="px-4 pb-4 space-y-2 animate-in slide-in-from-top-2 duration-200">
-                      {CURRENCIES.map((curr) => (
-                        <button
-                          key={curr.code}
-                          onClick={() => {
-                            setCurrency(curr);
-                            setIsCurrencySelectorOpen(false);
-                          }}
-                          className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${currency.code === curr.code
+                  <div className="w-full flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/[0.03] transition-all group">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/[0.03] text-[#A1A1AA] group-active:text-[#A78BFA] transition-colors">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
+                      </div>
+                      <div className="flex flex-col text-left">
+                        <span className="text-sm font-semibold text-white/90">Dark Mode</span>
+                        <span className="text-[10px] font-medium text-white/30 tracking-tight">Customize your appearance</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setIsDarkMode(!isDarkMode)}
+                      className={`relative w-11 h-6 rounded-full transition-all duration-400 ease-out flex items-center px-1 outline-none ${isDarkMode
+                        ? 'bg-[#A78BFA] shadow-[0_0_20px_rgba(167,139,250,0.3)]'
+                        : 'bg-[#1F1F2B] border border-white/5'
+                        }`}
+                    >
+                      <div
+                        className={`w-4 h-4 bg-white rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.5)] transform transition-transform duration-400 ease-out ${isDarkMode ? 'translate-x-5' : 'translate-x-0'}`}
+                      />
+                    </button>
+                  </div>
+
+                  <div className="w-full flex flex-col rounded-2xl bg-white/[0.02] border border-white/[0.03] overflow-hidden transition-all">
+                    <button
+                      onClick={() => setIsCurrencySelectorOpen(!isCurrencySelectorOpen)}
+                      className="w-full flex items-center justify-between p-4 active:scale-[0.98] transition-all group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/[0.03] text-[#A1A1AA] group-active:text-[#A78BFA] transition-colors">
+                          <span className="font-bold text-sm">{currency.symbol}</span>
+                        </div>
+                        <div className="flex flex-col text-left">
+                          <span className="text-sm font-semibold text-white/90">Currency</span>
+                          <span className="text-[10px] font-medium text-white/30 tracking-tight">Set your preferred currency</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.05] text-[11px] font-bold text-white/70">
+                        {currency.code}
+                        <ChevronRight size={12} className={`opacity-30 transition-transform duration-300 ${isCurrencySelectorOpen ? 'rotate-90' : ''}`} />
+                      </div>
+                    </button>
+
+                    {isCurrencySelectorOpen && (
+                      <div className="px-4 pb-4 space-y-2 animate-in slide-in-from-top-2 duration-200">
+                        {CURRENCIES.map((curr) => (
+                          <button
+                            key={curr.code}
+                            onClick={() => {
+                              setCurrency(curr);
+                              setIsCurrencySelectorOpen(false);
+                            }}
+                            className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${currency.code === curr.code
                               ? 'bg-[#A78BFA]/10 border border-[#A78BFA]/20 text-[#A78BFA]'
                               : 'bg-white/[0.01] border border-white/[0.03] text-white/50'
-                            }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="w-6 text-center font-bold">{curr.symbol}</span>
-                            <span className="text-xs font-semibold">{curr.name}</span>
-                          </div>
-                          {currency.code === curr.code && <div className="w-2 h-2 rounded-full bg-[#A78BFA] shadow-[0_0_8px_#A78BFA]" />}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center justify-between p-4 rounded-2xl bg-rose-500/5 border border-rose-500/10 transition-all group active:scale-[0.98]"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-rose-500/10 text-rose-500 group-active:bg-rose-500/20 transition-colors">
-                      <LogOut size={18} />
-                    </div>
-                    <div className="flex flex-col text-left">
-                      <span className="text-sm font-bold text-rose-500">Sign Out</span>
-                      <span className="text-[10px] font-medium text-rose-500/40 tracking-tight">Securely log out of your session</span>
-                    </div>
+                              }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="w-6 text-center font-bold">{curr.symbol}</span>
+                              <span className="text-xs font-semibold">{curr.name}</span>
+                            </div>
+                            {currency.code === curr.code && <div className="w-2 h-2 rounded-full bg-[#A78BFA] shadow-[0_0_8px_#A78BFA]" />}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <ChevronRight size={16} className="text-rose-500/20 group-hover:text-rose-500/40" />
-                </button>
-              </div>
+
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center justify-between p-4 rounded-2xl bg-rose-500/5 border border-rose-500/10 transition-all group active:scale-[0.98]"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-rose-500/10 text-rose-500 group-active:bg-rose-500/20 transition-colors">
+                        <LogOut size={18} />
+                      </div>
+                      <div className="flex flex-col text-left">
+                        <span className="text-sm font-bold text-rose-500">Sign Out</span>
+                        <span className="text-[10px] font-medium text-rose-500/40 tracking-tight">Securely log out of your session</span>
+                      </div>
+                    </div>
+                    <ChevronRight size={16} className="text-rose-500/20 group-hover:text-rose-500/40" />
+                  </button>
+                </div>
               </div>
 
               {/* Safe Area Spacer */}

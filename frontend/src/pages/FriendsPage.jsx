@@ -16,7 +16,7 @@ const FriendsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { searchQuery, setSearchQuery } = useSearch();
   const [activeFilter, setActiveFilter] = useState('all'); // all, owes_me, i_owe, settled
-  
+
   // Settle Up state
   const [isSettleModalOpen, setIsSettleModalOpen] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState(null);
@@ -51,8 +51,8 @@ const FriendsPage = () => {
     // Apply Search
     if ((searchQuery || "").trim()) {
       const q = (searchQuery || "").toLowerCase();
-      result = result.filter(f => 
-        (f.friend?.name || "").toLowerCase().includes(q) || 
+      result = result.filter(f =>
+        (f.friend?.name || "").toLowerCase().includes(q) ||
         (f.friend?.email || "").toLowerCase().includes(q)
       );
     }
@@ -72,9 +72,9 @@ const FriendsPage = () => {
 
   const handleRemoveFriend = async (friendId) => {
     if (window.confirm("Are you sure you want to unfriend this user? You can only unfriend if all balances are settled.")) {
-       // Since friendship is a hidden group, we can delete the group
-       // The backend should handle /friends/{id} DELETE but for now we'll show an error if not implemented
-       showToast("Unfriend functionality not fully supported in API yet", 'warning');
+      // Since friendship is a hidden group, we can delete the group
+      // The backend should handle /friends/{id} DELETE but for now we'll show an error if not implemented
+      showToast("Unfriend functionality not fully supported in API yet", 'warning');
     }
   };
 
@@ -88,7 +88,7 @@ const FriendsPage = () => {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-28 lg:pb-0">
-        
+
         {/* Header section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1F1F2B] pb-6">
           <div className="space-y-1">
@@ -121,11 +121,10 @@ const FriendsPage = () => {
               <button
                 key={filter.id}
                 onClick={() => setActiveFilter(filter.id)}
-                className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all duration-200 border ${
-                  activeFilter === filter.id 
-                    ? 'bg-[#A78BFA]/10 border-[#A78BFA]/30 text-[#A78BFA] shadow-[0_0_10px_rgba(167,139,250,0.1)]' 
+                className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all duration-200 border ${activeFilter === filter.id
+                    ? 'bg-[#A78BFA]/10 border-[#A78BFA]/30 text-[#A78BFA] shadow-[0_0_10px_rgba(167,139,250,0.1)]'
                     : 'bg-[#12121A] border-[#1F1F2B] text-[#A1A1AA] hover:text-[#EAEAF0] hover:bg-[#1F1F2B]'
-                }`}
+                  }`}
               >
                 {filter.label}
               </button>
@@ -157,7 +156,7 @@ const FriendsPage = () => {
                 {searchQuery || activeFilter !== 'all' ? "No friends match your filters" : "You haven't added any friends yet"}
               </h3>
               <p className="text-[#A1A1AA] text-sm mb-6 max-w-sm">
-                {searchQuery || activeFilter !== 'all' 
+                {searchQuery || activeFilter !== 'all'
                   ? "Try adjusting your search terms or clearing your filters."
                   : "Add your friends to easily split expenses directly without creating groups."}
               </p>
@@ -183,7 +182,7 @@ const FriendsPage = () => {
                     <p className="text-xs text-[#A1A1AA] mt-0.5">{friend.friend.email}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center justify-between sm:justify-end gap-6 sm:w-1/2">
                   <div className="text-left sm:text-right flex-1 sm:flex-none">
                     {friend.balance > 0 ? (
@@ -204,19 +203,18 @@ const FriendsPage = () => {
                   {/* Actions */}
                   <div className="flex items-center gap-2">
                     {friend.balance !== 0 && (
-                      <button 
+                      <button
                         onClick={() => handleSettleUp(friend)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                          friend.balance < 0 
-                            ? 'bg-[#1F1F2B] text-[#EAEAF0] hover:bg-[#1A1A24]' 
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${friend.balance < 0
+                            ? 'bg-[#1F1F2B] text-[#EAEAF0] hover:bg-[#1A1A24]'
                             : 'bg-[#A78BFA]/10 text-[#A78BFA] hover:bg-[#A78BFA]/20'
-                        }`}
+                          }`}
                       >
                         <HandCoins size={14} />
                         <span className="hidden sm:inline">{friend.balance < 0 ? 'Settle' : 'Remind'}</span>
                       </button>
                     )}
-                    <button 
+                    <button
                       onClick={() => handleRemoveFriend(friend.id)}
                       className="w-9 h-9 flex items-center justify-center rounded-xl bg-transparent border border-transparent hover:bg-rose-500/10 hover:border-rose-500/20 text-[#A1A1AA] hover:text-rose-400 transition-all opacity-0 group-hover:opacity-100"
                       title="Remove Friend"

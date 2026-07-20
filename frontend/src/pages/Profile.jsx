@@ -122,17 +122,16 @@ const Profile = () => {
               <p className="text-[#A1A1AA] text-sm font-medium">Choose your preferred currency for all financial views.</p>
             </div>
           </div>
-          
+
           <div className="flex gap-3">
             {CURRENCIES.map((curr) => (
               <button
                 key={curr.code}
                 onClick={() => setCurrency(curr)}
-                className={`flex-1 flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-300 group ${
-                  currency.code === curr.code
+                className={`flex-1 flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-300 group ${currency.code === curr.code
                     ? 'bg-[#A78BFA]/10 border-[#A78BFA] text-[#A78BFA] shadow-[0_0_15px_rgba(167,139,250,0.1)]'
                     : 'bg-[#09090B] border-[#1F1F2B] text-[#A1A1AA] hover:border-[#1F1F2B]/80 hover:bg-[#12121A]'
-                }`}
+                  }`}
               >
                 <span className="text-2xl font-bold mb-1 group-hover:scale-110 transition-transform">{curr.symbol}</span>
                 <span className="text-xs font-bold uppercase tracking-widest">{curr.name}</span>

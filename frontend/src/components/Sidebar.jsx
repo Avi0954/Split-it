@@ -123,10 +123,10 @@ const Sidebar = () => {
                 </div>
                 <button
                   onClick={() => setIsDarkMode(!isDarkMode)}
-                  className={`relative w-8 h-4.5 rounded-full transition-all duration-300 ease-out flex items-center p-0.5 outline-none ${isDarkMode 
-                    ? 'bg-[#A78BFA] shadow-[0_0_10px_rgba(167,139,250,0.3)]' 
+                  className={`relative w-8 h-4.5 rounded-full transition-all duration-300 ease-out flex items-center p-0.5 outline-none ${isDarkMode
+                    ? 'bg-[#A78BFA] shadow-[0_0_10px_rgba(167,139,250,0.3)]'
                     : 'bg-[#1F1F2B] border border-white/5'
-                  }`}
+                    }`}
                 >
                   <div className={`w-3.5 h-3.5 bg-white rounded-full shadow-sm transform transition-transform duration-300 ease-out ${isDarkMode ? 'translate-x-3.5' : 'translate-x-0'}`} />
                 </button>

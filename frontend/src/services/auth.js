@@ -55,3 +55,19 @@ export const logout = (navigate) => {
     window.location.href = '/login';
   }
 };
+
+/**
+ * Initiates a password reset request
+ */
+export const forgotPassword = async (email) => {
+  const response = await api.post('/auth/forgot-password', { email });
+  return response.data;
+};
+
+/**
+ * Resets the password using a token
+ */
+export const resetPassword = async (token, newPassword) => {
+  const response = await api.post('/auth/reset-password', { token, new_password: newPassword });
+  return response.data;
+};
