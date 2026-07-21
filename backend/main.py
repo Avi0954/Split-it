@@ -118,7 +118,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 # Load from environment variable for production (e.g., "https://my-app.vercel.app,https://my-app.com")
 env_origins = os.environ.get("ALLOWED_ORIGINS")
 if env_origins:
-    origins = [origin.strip() for origin in env_origins.split(",")]
+    origins = [origin.strip().rstrip('/') for origin in env_origins.split(",") if origin.strip()]
 else:
     origins = [
         "http://localhost:5173",
