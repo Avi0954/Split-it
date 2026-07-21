@@ -21,6 +21,7 @@ import { SearchProvider } from './contexts/SearchContext';
 import { HeaderProvider } from './contexts/HeaderContext';
 import { CurrencyProvider } from './contexts/CurrencyContext';
 import { WebSocketProvider } from './providers/WebSocketProvider';
+import { NotificationProvider } from './notifications/NotificationProvider';
 
 /**
  * Root Application Routing Component
@@ -39,8 +40,9 @@ function App() {
       <CurrencyProvider>
         <HeaderProvider>
           <WebSocketProvider>
-            <Router>
-              <SearchProvider>
+            <NotificationProvider>
+              <Router>
+                <SearchProvider>
                 <Routes>
                   {/* Public Routes - Accessible only when logged out */}
                   <Route
@@ -134,6 +136,7 @@ function App() {
                 </Routes>
               </SearchProvider>
             </Router>
+          </NotificationProvider>
           </WebSocketProvider>
         </HeaderProvider>
       </CurrencyProvider>

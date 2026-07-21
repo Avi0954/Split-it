@@ -23,3 +23,6 @@ class User(Base):
     # Password reset tokens
     password_reset_tokens = relationship("PasswordResetToken", back_populates="user", cascade="all, delete-orphan")
 
+    # Push subscriptions
+    push_subscriptions = relationship("PushSubscription", back_populates="user", cascade="all, delete-orphan")
+

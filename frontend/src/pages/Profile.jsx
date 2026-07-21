@@ -5,6 +5,7 @@ import { getCurrentUser, logout } from '../services/auth';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useCurrency } from '../contexts/CurrencyContext';
+import NotificationSettings from '../components/NotificationSettings';
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -140,6 +141,9 @@ const Profile = () => {
             ))}
           </div>
         </div>
+
+        {/* Push Notification Settings */}
+        <NotificationSettings />
 
         {/* Associated Groups */}
         <div className="space-y-4 pt-2">

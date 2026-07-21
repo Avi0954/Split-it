@@ -30,7 +30,7 @@ def add_new_member(
     current_user: User = Depends(get_current_user)
 ):
     """Adds a member to the specified group by user ID."""
-    result = add_member(db, group_id, member_data.user_id)
+    result = add_member(db, group_id, member_data.user_id, background_tasks, current_user.name)
     
     # Send email invitation
     # Fetch user email and group details

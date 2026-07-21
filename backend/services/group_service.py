@@ -7,6 +7,8 @@ from backend.models.settlement import Settlement
 from backend.schemas.group import GroupCreate
 from backend.services.expense_service import calculate_group_balances
 from backend.services.realtime_service import realtime_service
+from backend.services.notification_dispatcher import dispatch_added_to_group
+from fastapi import BackgroundTasks
 
 def create_group(db: Session, user_id: int, group_data: GroupCreate):
     """Creates a new group and automatically adds the creator as a member."""
@@ -35,7 +37,7 @@ def create_group(db: Session, user_id: int, group_data: GroupCreate):
     
     return new_group
 
-def add_member(db: Session, group_id: int, user_id: int):
+def add_member(db: Session, group_id: int, user_id: int, background_tasks: BackgroundTasks = None, current_user_name: str = ""):
     """Adds a user to a group after validating existence and duplicates."""
     # Check if group exists
     group = db.query(Group).filter(Group.id == group_id).first()
@@ -67,6 +69,10 @@ def add_member(db: Session, group_id: int, user_id: int):
     
     # Broadcast event
     realtime_service.broadcast_member_added(db, group_id, user_id)
+    
+    # Send Push Notification
+    if background_tasks and current_user_name:
+        dispatch_added_to_group(background_tasks, db, user_id, group.name, group_id)
     
     return new_member
 

@@ -11,6 +11,7 @@ from backend.models.friendship import Friendship
 from backend.utils.dependencies import get_current_user
 from backend.services.email.email_service import email_service
 from backend.services.realtime_service import realtime_service
+from backend.services.notification_dispatcher import dispatch_friend_added
 from fastapi import BackgroundTasks
 
 router = APIRouter()
@@ -85,6 +86,8 @@ def add_friend(request: AddFriendRequest, background_tasks: BackgroundTasks, db:
         "balance": 0.0
     }
     realtime_service.broadcast_friend_added(db, new_friendship.id, friend_payload)
+    # Send Push Notification
+    dispatch_friend_added(background_tasks, db, friend_user.id, current_user.name)
 
     return friend_data
 

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, Depends
 from sqlalchemy.orm import Session
 from backend.utils.dependencies import get_db
-from backend.utils.security import verify_access_token
+from backend.utils.security import decode_access_token
 from backend.websocket.manager import manager
 import logging
 import asyncio
@@ -23,7 +23,7 @@ async def websocket_endpoint(
     """
     # Authenticate token
     try:
-        payload = verify_access_token(token)
+        payload = decode_access_token(token)
         if not payload:
             await websocket.close(code=1008)
             return

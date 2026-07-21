@@ -12,6 +12,7 @@ import { useCurrency } from '../contexts/CurrencyContext';
 import LocalReceiptThumbnail from '../components/LocalReceiptThumbnail';
 import { deleteReceiptByExpenseId } from '../services/receiptDb';
 import { useAllRealtimeEvents } from '../hooks/useRealtimeEvents';
+import { useHeader } from '../contexts/HeaderContext';
 
 const GroupDetails = () => {
   const { id } = useParams();

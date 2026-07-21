@@ -34,11 +34,17 @@ class RealtimeService:
             "payload": payload
         }
         
-        # We spawn a background task so it doesn't hold up the request
-        # In FastAPI, standard async functions can be created as tasks on the event loop
-        loop = asyncio.get_event_loop()
-        loop.create_task(manager.broadcast_to_users(user_ids, event_data))
-        logger.debug(f"Dispatched {event_type} to {user_ids}")
+        try:
+            # We spawn a background task so it doesn't hold up the request
+            # In FastAPI, standard async functions can be created as tasks on the event loop
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = asyncio.get_event_loop()
+            loop.create_task(manager.broadcast_to_users(user_ids, event_data))
+            logger.debug(f"Dispatched {event_type} to {user_ids}")
+        except Exception as e:
+            logger.error(f"Failed to dispatch realtime event: {e}")
 
     # --- Expense Events ---
     def broadcast_expense_created(self, db: Session, group_id: int, expense_data: dict):

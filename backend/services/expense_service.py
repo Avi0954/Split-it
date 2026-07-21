@@ -7,8 +7,10 @@ from backend.models.user import User
 from backend.schemas.expense import ExpenseCreate, UserBalance
 from backend.utils.currency import convert_currency
 from backend.services.realtime_service import realtime_service
+from backend.services.notification_dispatcher import dispatch_expense_added
+from fastapi import BackgroundTasks
 
-def create_expense(db: Session, group_id: int, expense_data: ExpenseCreate):
+def create_expense(db: Session, group_id: int, expense_data: ExpenseCreate, background_tasks: BackgroundTasks = None, current_user_name: str = ""):
     """
     Creates a new expense and its associated splits.
     Validates that:
@@ -83,6 +85,18 @@ def create_expense(db: Session, group_id: int, expense_data: ExpenseCreate):
         "description": new_expense.description
     }
     realtime_service.broadcast_expense_created(db, group_id, expense_dict)
+    
+    # Send Push Notifications
+    if background_tasks and current_user_name:
+        # Notify everyone in the group except the payer
+        notify_users = [
+            m.user_id for m in db.query(GroupMember).filter(GroupMember.group_id == group_id).all()
+            if m.user_id != expense_data.payer_id
+        ]
+        dispatch_expense_added(
+            background_tasks, db, notify_users, current_user_name, 
+            expense_data.amount, expense_data.description, group_id
+        )
     
     return new_expense
 

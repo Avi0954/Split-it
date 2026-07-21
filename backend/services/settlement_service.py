@@ -8,6 +8,8 @@ from backend.services.expense_service import calculate_group_balances
 from backend.schemas.settlement import SimplifiedSettlement, SettlementCreate
 from backend.utils.currency import convert_currency
 from backend.services.realtime_service import realtime_service
+from backend.services.notification_dispatcher import dispatch_settlement_received
+from fastapi import BackgroundTasks
 
 def calculate_optimized_settlements(db: Session, group_id: int):
     """
@@ -85,7 +87,7 @@ def calculate_optimized_settlements(db: Session, group_id: int):
             
     return settlements
 
-def record_settlement(db: Session, settlement_data: SettlementCreate):
+def record_settlement(db: Session, settlement_data: SettlementCreate, background_tasks: BackgroundTasks = None, current_user_name: str = ""):
     """Records a payment between two users to settle debt."""
     new_settlement = Settlement(
         group_id=settlement_data.group_id,
@@ -107,5 +109,11 @@ def record_settlement(db: Session, settlement_data: SettlementCreate):
         "to_user_id": new_settlement.to_user_id
     }
     realtime_service.broadcast_settlement_created(db, settlement_data.group_id, settlement_dict)
+    
+    # Send Push Notification
+    if background_tasks and current_user_name:
+        dispatch_settlement_received(
+            background_tasks, db, new_settlement.to_user_id, current_user_name, new_settlement.amount
+        )
     
     return new_settlement

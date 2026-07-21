@@ -7,14 +7,15 @@ from backend.utils.dependencies import get_db, get_current_user
 from backend.schemas.password_reset import ForgotPasswordRequest, ResetPasswordRequest
 from backend.services.password_reset_service import request_password_reset, reset_password, cleanup_expired_tokens
 from backend.services.email.email_service import email_service
-from backend.utils.rate_limit import rate_limit_forgot_password, check_email_rate_limit
+from backend.utils.rate_limit import rate_limit_forgot_password, check_email_rate_limit, rate_limit_auth
 from fastapi import Request, BackgroundTasks
 
 router = APIRouter()
 
 @router.post("/signup", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-def signup(user_data: UserCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+def signup(user_data: UserCreate, request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """Registers a new user and hashes their password."""
+    rate_limit_auth(request)
     print(f"DEBUG: signup called with: {user_data}")
     # Check if email is already registered
     existing_user = db.query(User).filter(User.email == user_data.email).first()
@@ -41,8 +42,9 @@ def signup(user_data: UserCreate, background_tasks: BackgroundTasks, db: Session
     return new_user
 
 @router.post("/login")
-def login(login_data: UserLogin, db: Session = Depends(get_db)):
+def login(login_data: UserLogin, request: Request, db: Session = Depends(get_db)):
     """Authenticates a user and returns a JWT access token."""
+    rate_limit_auth(request)
     # Find user by email
     user = db.query(User).filter(User.email == login_data.email).first()
     
@@ -85,9 +87,11 @@ def forgot_password(
 @router.post("/reset-password")
 def reset_password_endpoint(
     request_data: ResetPasswordRequest, 
+    request: Request,
     db: Session = Depends(get_db)
 ):
     """Resets the user password using a valid token."""
+    rate_limit_auth(request, limit=5)
     # We call the service function to validate and save
     reset_password(db, request_data.token, request_data.new_password)
     
