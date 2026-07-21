@@ -17,10 +17,10 @@ async def websocket_endpoint(
     token: str = Query(...),
     db: Session = Depends(get_db)
 ):
-    \"\"\"
+    """
     WebSocket endpoint for real-time synchronization.
     Authenticates via JWT token query parameter.
-    \"\"\"
+    """
     await websocket.accept()
     
     # Authenticate token
