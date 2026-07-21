@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Activity as ActivityIcon, Receipt, HandCoins, Calendar, Users } from 'lucide-react';
 import Layout from '../components/Layout';
 import api from '../services/api';
