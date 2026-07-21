@@ -1,10 +1,14 @@
 import axios from 'axios';
 
-// Use VITE_API_URL if provided, else in DEV use localhost/api, in PROD use /api
 const defaultBaseUrl = import.meta.env.DEV ? 'http://localhost:8000/api' : '/api';
 
+let baseUrl = import.meta.env.VITE_API_URL || defaultBaseUrl;
+if (baseUrl && !baseUrl.endsWith('/api')) {
+  baseUrl = `${baseUrl.replace(/\/$/, '')}/api`;
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || defaultBaseUrl,
+  baseURL: baseUrl,
 });
 
 /**
