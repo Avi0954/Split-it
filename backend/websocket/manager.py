@@ -14,7 +14,6 @@ class ConnectionManager:
         # when broadcasting.
 
     async def connect(self, websocket: WebSocket, user_id: int):
-        await websocket.accept()
         if user_id not in self.active_connections:
             self.active_connections[user_id] = set()
         self.active_connections[user_id].add(websocket)
